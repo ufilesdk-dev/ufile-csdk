@@ -63,9 +63,17 @@ static int parse_mfinish_result(const char *body, const char *header, char *etag
     char data[64];
     char *pdata = NULL;
     int i = 0;
-
+	
+	if (stristr(header,"ETag:") == NULL) 
+	{
+		return ret;
+	}
+//	printf("###---###:stristr:%s\n", stristr(header,"ETag:"));
+//	printf("###---###:len(stristr):%d:%d\n", sizeof(stristr(header, "ETag:")), strlen(stristr(header,"ETag:")));
     snprintf(data, 64, "%s", stristr(header, "ETag:"));
+//	printf("###---###:====================");	
     pdata = strchr(data, ':') + 1;
+//	printf("pdata:%s, len=%d\n", pdata, sizeof(pdata));
     while ( *(pdata + i++) != '\0') {
         if ( *(pdata + i) == '\r' || *(pdata + i) == '\n') {
             pdata[i] = '\0';
@@ -181,6 +189,7 @@ ret_status_t *init_multipart_upload(const char *bucket,
     sprintf(http_options.method, "%s", "POST");
     ufile_host(bucket, http_options.url);
     sprintf(http_options.url, "%s%s%s", http_options.url, key, "?uploads");
+	printf("%s%s%s", http_options.url, key, "?uploads");
 
     memset(header, 0, 256);
     ret = token(req_headers,
@@ -189,7 +198,8 @@ ret_status_t *init_multipart_upload(const char *bucket,
                 bucket,
                 key,
                 NULL,
-                header_token);
+                header_token,
+				NULL);
     if (ret) {
         UFILE_SET_ERROR(ERR_CSDK_CLIENT_INTERNAL);
         http_cleanup_curl(curl, req_headers);
@@ -329,7 +339,8 @@ ret_status_t *upload_multipart(const char *bucket,
                 bucket,
                 key,
                 NULL,
-                header_token);
+                header_token,
+				NULL);
     if (ret) {
         UFILE_SET_ERROR(ERR_CSDK_CLIENT_INTERNAL);
         fclose(pf);
@@ -452,13 +463,27 @@ ret_status_t *upload_multipart_finish(const char *bucket,
              upload_id);
 
     memset(header, 0, 256);
+
+	struct CallbackPolicy p;
+	p.CallbackUrl = "http://106.75.231.229/callbackdemo/demo/world";
+	p.CallbackMethod = "GET";
+	p.ReturnUrl=NULL;     
+	p.ReturnBody=NULL;     
+	p.CallbackHost=NULL;     
+	p.CallbackBody=NULL;    
+	p.CallbackBodyType=NULL;
+	p.AutogenKeyPattern=NULL;
+	p.FsizeLimit = NULL;
+	p.MimeLimit =NULL;
+
     ret = token(req_headers,
                 "POST",
                 HEAD_FIELD_CHECK,
                 bucket,
                 key,
                 NULL,
-                header_token);
+                header_token,
+				&p);
     if (ret) {
         UFILE_SET_ERROR(ERR_CSDK_CLIENT_INTERNAL);
         http_cleanup_curl(curl, req_headers);
@@ -519,6 +544,7 @@ ret_status_t *upload_multipart_finish(const char *bucket,
         return ret_status;
     }
 
+	printf("response is %s\n", response_buf);
     if (code != 200) {
         parse_ret = ufile_error_response(response_buf, &ret, error_message);
         if (parse_ret) {

@@ -78,7 +78,8 @@ ret_status_t *download(const char *bucket,
                 bucket,
                 key,
                 NULL,
-                header_token);
+                header_token,
+				NULL);
     if (ret) {
         UFILE_SET_ERROR(ERR_CSDK_CLIENT_INTERNAL);
         fclose(pf);

@@ -55,7 +55,8 @@ ret_status_t *delete(const char *bucket, const char *key) {
                 bucket,
                 key,
                 NULL,
-                header_token);
+                header_token,
+				NULL);
     if (ret) {
         UFILE_SET_ERROR(ERR_CSDK_CLIENT_INTERNAL);
         return ret_status;

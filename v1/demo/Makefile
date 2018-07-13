@@ -2,7 +2,7 @@ CC = gcc
 MAKE = make
 CTAGS = ctags
 
-INCLUDES=-I/usr/local/include -I/usr/include -I../ucloud/
+INCLUDES=-I/usr/local/include -I/usr/include -I../ucloud/ -I/use/local/include/json-c
 LIBS = -L../ucloud/ -L/usr/local/lib -L/usr/lib -lcurl -lmagic -ljson-c -lufilecsdk
 CFLAGS = -g -fPIC -c $(INCLUDES)
 OFLAGS = -g -Wall $(LIBS)
