@@ -2,6 +2,7 @@
 
 #include <curl/curl.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "http.h"
 #include "string_util.h"
@@ -35,7 +36,7 @@ ufile_head(const char* bucket, const char *key, struct ufile_file_info *info){
     }
 
     struct http_options *opt;
-    error = set_http_options(&opt, "HEAD", "", bucket, key);
+    error = set_http_options(&opt, "HEAD", "", bucket, key, NULL);
     if(UFILE_HAS_ERROR(error.code)){
         http_cleanup(curl, opt);
         return error;

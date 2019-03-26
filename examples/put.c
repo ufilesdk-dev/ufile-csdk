@@ -16,14 +16,14 @@ int main(int argc, char *argv[]){
 
     printf("正在初始化 SDK ......\n");
     struct ufile_error error;
-    error = ufile_sdk_initialize(cfg);
+    error = ufile_sdk_initialize(cfg, 0);
     if(UFILE_HAS_ERROR(error.code)){
         printf("初始化 sdk 失败，错误信息为：%s\n", error.message);
         return 1;
     }
 
-    printf("调用 put 上传文件.....\n");
-    FILE *fp = fopen(argv[0], "r");
+    printf("调用 put 上传文件 %s\n", argv[0]);
+    FILE *fp = fopen(argv[0], "rb");
     if (fp == NULL){
         fprintf(stderr, "打开文件失败, 错误信息为: %s\n", strerror(errno));
         return 1;
@@ -32,21 +32,23 @@ int main(int argc, char *argv[]){
     if UFILE_HAS_ERROR(error.code) {
         printf("调用 put 失败，错误信息为：%s\n", error.message);
     }else{
-        printf("调用 put 成功");
+        printf("调用 put 成功\n");
     }
 
-    printf("调用 put_buf 上传文件......");
+    printf("调用 put_buf 上传文件......\n");
     size_t file_size = helper_get_file_size(fp);
     char *buf = malloc(file_size);
+    fseek(fp, 0, SEEK_SET);
+    fread(buf, 1, file_size, fp);
     error = ufile_put_buf("lapd", "hello", "", buf, file_size);
     if UFILE_HAS_ERROR(error.code) {
         printf("调用 put_buf 失败，错误信息为：%s\n", error.message);
     }else{
-        printf("调用 put_buf 成功");
+        printf("调用 put_buf 成功\n");
     }
 
     free(buf);
-    close(fp);
+    fclose(fp);
     ufile_sdk_cleanup();
     return 0;
 }

@@ -8,13 +8,15 @@
 #define USERAGENT ("UFile CSDK/2.0.0")
 
 extern struct ufile_config *_global_config;
+extern int _g_debug_open;
 
 struct ufile_error
 set_http_options(struct http_options **opt, 
                  const char *method,
                  const char *mime_type,
                  const char *bucket,
-                 const char *key) {
+                 const char *key,
+                 const char *query) {
     struct ufile_error error = NO_ERROR;
     struct ufile_config *cfg = _global_config;
     if (cfg == NULL){
@@ -40,7 +42,11 @@ set_http_options(struct http_options **opt,
     free(buf);
 
     tmp->method = ufile_strconcat(method, NULL);
-    tmp->url = ufile_strconcat(bucket, ".", cfg->file_host, "/", key, NULL);
+    if(query != NULL){
+        tmp->url = ufile_strconcat(bucket, ".", cfg->file_host, "/", key, "?", query, NULL);
+    }else{
+        tmp->url = ufile_strconcat(bucket, ".", cfg->file_host, "/", key, NULL);
+    }
 
     *opt = tmp;
     return error;
@@ -52,8 +58,17 @@ set_curl_options(CURL *curl,
     curl_easy_setopt(curl, CURLOPT_URL, opt->url);
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, opt->method);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, opt->header);
+    if(_g_debug_open != 0){
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    }
 
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+}
+void
+set_content_length(struct http_options* opt, size_t length){
+    char tmp[40] = {0};
+    sprintf(tmp, "Content-Length: %ld", length);
+    opt->header = curl_slist_append(opt->header, tmp); 
 }
 
 void
@@ -99,68 +114,62 @@ curl_do(CURL *curl){
 }
 
 
-static size_t writen(FILE *f, char *buffer, char *ptr, const size_t total) {
-
-    int    fd = -1;
-    size_t left = total;
-    int nw = 0;
-    while(left > 0) {
-        //优先使用文件对象
-        if (f) {
-            if (fd == -1) fd = fileno(f);
-            nw = write(fd, ptr+total-left, left);
-        } else {
-			strcat(buffer, ptr+total-left);
-            left = 0;
-        }
-
-        if (nw <= 0) return total-left;
-        left -= nw;
-    }
-    return total-left;
-}
-
 size_t http_write_cb(char *ptr, size_t size, size_t nmemb, void *user_data) {
     struct http_body *param = (struct http_body *)user_data;
     if (!param) {
         return 0;
     }
-    return writen(param->f, param->buffer, (char *)ptr, size*nmemb);
+    if(param->f != NULL){
+        return fwrite(ptr, size, nmemb, param->f);
+    }
+    size_t remain_size = param->buffer_size - param->pos_n;
+    if(remain_size <= 0){ 
+        return 0;//buffer 已经写满。
+    }
+    size_t curl_writen_size = size*nmemb;
+    if(curl_writen_size < remain_size){ //要写的数据还在 buffer 的范围内。
+        memcpy(param->buffer+param->pos_n, ptr, curl_writen_size);
+        param->pos_n += curl_writen_size;
+        return curl_writen_size;
+    }else{//要写的数据还在超出了 buffer 的范围，把 buffer 写满即可。
+        memcpy(param->buffer+param->pos_n, ptr, remain_size);
+        param->pos_n += remain_size;
+        return remain_size;
+    }
 }
 
-size_t http_read_cb(char *buffer, size_t size, size_t nitems, void *user_data) {
+size_t http_read_cb(char *ptr, size_t size, size_t nitems, void *user_data) {
     struct http_body *param = (struct http_body*)user_data;
     if (!param) {
         return 0;
     }
 
     if(param->f != NULL){
-        size_t nc =  fread(buffer, size, nitems, param->f);
+        size_t nc = fread(ptr, size, nitems, param->f);
         return nc;
     }
+
+    size_t remain_size = param->buffer_size - param->pos_n;
+    if(remain_size <= 0){
+        return 0; //buffer 已经读完。
+    }
     size_t curl_need_bytes = size*nitems;
-    if(curl_need_bytes > param->need_total_n){
-        memcpy(buffer, param->buffer, param->need_total_n);
-        param->read_total_n = param->need_total_n;
-        return param->need_total_n;
-    }else{
-        size_t remain_bytes = param->need_total_n - param->read_total_n;
-        if(remain_bytes > curl_need_bytes){
-            memcpy(buffer, param->buffer+param->read_total_n, curl_need_bytes);
-            param->read_total_n+=curl_need_bytes;
-            return curl_need_bytes;
-        }else{
-            memcpy(buffer, param->buffer+param->read_total_n, remain_bytes);
-            param->read_total_n+=remain_bytes;
-            return remain_bytes;
-        }
+    if(curl_need_bytes < remain_size){ //要读取的数据还在 buffer 范围内
+        memcpy(ptr, param->buffer+param->pos_n, curl_need_bytes);
+        param->pos_n += curl_need_bytes;
+        return curl_need_bytes;
+    }else{ //要读的数据超出了 buffer 的范围，把剩余的 buffer 读完。
+        memcpy(ptr, param->buffer+param->pos_n, remain_size);
+        param->pos_n += remain_size;
+        return remain_size;
     }
 }
 
-struct curl_slist*
-set_content_length(struct curl_slist* header, size_t length){
-    char tmp[40] = {0};
-    sprintf(tmp, "Content-Length: %ld", length);
-    header = curl_slist_append(header, tmp); 
-    return header;
+void
+set_escaped_url(CURL *curl, struct http_options *opt, const char* query){
+    char* escaped_str = curl_easy_escape(curl, query, 0);
+    char *t = opt->url;
+    opt->url = ufile_strconcat(opt->url, "?", query, NULL);
+    free(t);
+    curl_free(escaped_str);
 }

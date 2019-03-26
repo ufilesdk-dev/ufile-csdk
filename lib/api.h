@@ -37,7 +37,7 @@ typedef size_t (*ufile_reader_t)(void *ptr, size_t size, size_t nmemb, void *str
 //**********************************read and write call back
 
 struct ufile_error
-ufile_sdk_initialize(const struct ufile_config cfg);
+ufile_sdk_initialize(const struct ufile_config cfg, int open_verbose);
 
 void
 ufile_sdk_cleanup();
@@ -50,6 +50,23 @@ ufile_put_buf(const char* bucket, const char *key, const char *mime_type, char *
 
 struct ufile_error
 ufile_put_file(const char* bucket, const char *key, const char *mime_type, FILE *file);
+
+struct ufile_mutipart_state{
+    const char *bucket;
+    const char *key;
+    size_t part_size;
+    const char *upload_id;
+    struct etag_slist *etags;
+};
+struct ufile_error
+ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket, const char *key, const char* mime_type);
+struct ufile_error
+ufile_multiple_upload_part(struct ufile_mutipart_state *self, char *buffer, size_t buf_len, int part_number);
+struct ufile_error
+ufile_multiple_upload_finish(struct ufile_mutipart_state *self);
+struct ufile_error
+ufile_multiple_upload_abort(struct ufile_mutipart_state *self);
+
 #ifdef __cplusplus
 }
 #endif

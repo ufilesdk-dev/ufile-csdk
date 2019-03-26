@@ -42,7 +42,7 @@ int main(int argc, char *argv[]){
     free(buf);
 
     printf("正在初始化 SDK ......\n");
-    error = ufile_sdk_initialize(cfg);
+    error = ufile_sdk_initialize(cfg, 0);
     if(UFILE_HAS_ERROR(error.code)){
         printf("初始化 sdk 失败，错误信息为：%s\n", error.message);
         return 1;

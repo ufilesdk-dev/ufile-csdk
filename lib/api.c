@@ -7,36 +7,48 @@
 #include "string_util.h"
 
 struct ufile_config *_global_config = NULL;
+int _g_debug_open = 0;
 
-static void
-config_validation(struct ufile_config *cfg, struct ufile_error *error){
-    if (strlen(cfg->private_key) == 0){
-        error->code = UFILE_CONFIG_ERROR_CODE;
-        error->message = "private_key cannot be empty";
+static struct ufile_error
+config_validation(struct ufile_config cfg){
+    struct ufile_error error=NO_ERROR;
+    if (!cfg.private_key || strlen(cfg.private_key) == 0){
+        error.code = UFILE_CONFIG_ERROR_CODE;
+        error.message = "private_key cannot be empty";
+        return error;
     }
 
-    if (strlen(cfg->public_key) == 0){
-        error->code = UFILE_CONFIG_ERROR_CODE;
-        error->message = "public_key cannot be empty";
+    if (!cfg.public_key || strlen(cfg.public_key) == 0){
+        error.code = UFILE_CONFIG_ERROR_CODE;
+        error.message = "public_key cannot be empty";
+        return error;
     }
 
-    if (strlen(cfg->file_host) == 0){
-        error->code = UFILE_CONFIG_ERROR_CODE;
-        error->message = "file_host cannot be empty";
+    if (!cfg.file_host || strlen(cfg.file_host) == 0){
+        error.code = UFILE_CONFIG_ERROR_CODE;
+        error.message = "file_host cannot be empty";
+        return error;
     }
 
-    if (strlen(cfg->bucket_host) == 0){
-        error->code = UFILE_CONFIG_ERROR_CODE;
-        error->message = "bucket host cannot be empty";
+    if (!cfg.bucket_host || strlen(cfg.bucket_host) == 0){
+        error.code = UFILE_CONFIG_ERROR_CODE;
+        error.message = "bucket host cannot be empty";
+        return error;
     }
+    return error;
 }
 
 struct ufile_error
-ufile_sdk_initialize(const struct ufile_config cfg){
+ufile_sdk_initialize(const struct ufile_config cfg, int debug_open){
+    _g_debug_open = debug_open; 
     struct ufile_error error = NO_ERROR;
     if(_global_config != NULL){
         error.code = UFILE_CONFIG_ERROR_CODE;
         error.message = "the sdk has been initialization.";
+        return error;
+    }
+    error=config_validation(cfg);
+    if(UFILE_HAS_ERROR(error.code)){
         return error;
     }
     _global_config = (struct ufile_config*)malloc(sizeof(struct ufile_config));
@@ -44,11 +56,6 @@ ufile_sdk_initialize(const struct ufile_config cfg){
     _global_config->private_key = ufile_strconcat(cfg.private_key, NULL);
     _global_config->file_host = ufile_strconcat(cfg.file_host, NULL);
     _global_config->bucket_host = ufile_strconcat(cfg.bucket_host, NULL);
-
-    config_validation(_global_config, &error);
-    if(UFILE_HAS_ERROR(error.code)){
-        return error;
-    }
 
     CURLcode ret_code = curl_global_init(CURL_GLOBAL_ALL);
     if(CURLE_OK != ret_code){
@@ -98,6 +105,7 @@ ufile_load_config_from_json(const char* json_buf, struct ufile_config *cfg){
         item = item->next;
     }
     cJSON_Delete(json);
+    error = config_validation(*cfg);
     return error;
 }
 

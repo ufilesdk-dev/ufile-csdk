@@ -13,3 +13,6 @@ target_link_libraries(head_file ${DEPEND_LIB})
 
 add_executable(put put.c)
 target_link_libraries(put ${DEPEND_LIB})
+
+add_executable(mput mput.c) 
+target_link_libraries(mput ${DEPEND_LIB})

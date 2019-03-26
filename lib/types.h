@@ -19,6 +19,7 @@ struct ufile_error{
 #define UFILE_OK  0
 #define UFILE_ERROR_CODE -1
 #define UFILE_CONFIG_ERROR_CODE -2
+#define UFILE_MULTIPLE_INIT_ERROR_CODE -3
 #define CURL_ERROR_CODE -20
 
 #define NO_ERROR {0, ""} 
