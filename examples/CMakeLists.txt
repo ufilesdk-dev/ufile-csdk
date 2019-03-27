@@ -16,3 +16,6 @@ target_link_libraries(put ${DEPEND_LIB})
 
 add_executable(mput mput.c) 
 target_link_libraries(mput ${DEPEND_LIB})
+
+add_executable(download download.c) 
+target_link_libraries(download ${DEPEND_LIB})

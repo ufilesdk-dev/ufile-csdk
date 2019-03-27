@@ -9,8 +9,6 @@ HMAC_SHA1(unsigned char hmac[20]
     , int message_len
 );
 
-
-
 int 
 base64decode_len(const char *bufcoded);
 int 
@@ -20,4 +18,7 @@ int
 base64encode_len(int len);
 int 
 base64encode(char *encoded, const char *string, int len);
+
+void
+query_escape(char *out, const char* query, unsigned int query_len);
 #endif

@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "http.h"
 #include "cJSON.h"
@@ -13,6 +14,7 @@ struct etag_slist{
     char *etag_buf;
     size_t pos;
     size_t cap;
+    pthread_mutex_t mutex;
 };
 
 static void
@@ -44,7 +46,9 @@ header_cb(char *buffer, size_t size, size_t nitems, void *userdata){
         size_t buffer_size = nitems * size;
         struct etag_slist *list = (struct etag_slist*)userdata;
         size_t header_len = strlen(ETAG_HEADER);
+        pthread_mutex_lock(&list->mutex);
         append_etage(list, buffer+header_len, buffer_size-header_len);
+        pthread_mutex_unlock(&list->mutex);
     }
 
     return nitems * size;
@@ -71,14 +75,14 @@ ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket
         return error;
     }
 
-    struct http_options *opt;
+    struct http_options opt;
     error = set_http_options(&opt, "POST", mime_type, bucket, key, "uploads");
     if(UFILE_HAS_ERROR(error.code)){
-        http_cleanup(curl, opt);
+        http_cleanup(curl, &opt);
         return error;
     }
 
-    set_curl_options(curl, opt);
+    set_curl_options(curl, &opt);
 
     struct http_body response_body;
     memset(&response_body, 0, sizeof(struct http_body));
@@ -90,7 +94,7 @@ ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_body);
 
     error = curl_do(curl);
-    http_cleanup(curl, opt);
+    http_cleanup(curl, &opt);
     if(UFILE_HAS_ERROR(error.code)){
         return error;
     }
@@ -115,6 +119,8 @@ ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket
     self->etags->cap = 0;
     self->etags->pos = 0;
     self->etags->etag_buf = NULL;
+    //self->etags->mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_init(&self->etags->mutex, NULL);
     return error;
 }
 
@@ -128,16 +134,16 @@ ufile_multiple_upload_part(struct ufile_mutipart_state *self, char *buffer, size
         return error;
     }
 
-    struct http_options *opt;
+    struct http_options opt;
     char query[64]={0};
     sprintf(query, "partNumber=%d&uploadId=%s", part_number, self->upload_id);
     error = set_http_options(&opt, "PUT", "", self->bucket, self->key, query);
     if(UFILE_HAS_ERROR(error.code)){
-        http_cleanup(curl, opt);
+        http_cleanup(curl, &opt);
         return error;
     }
 
-    set_content_length(opt, buf_len);
+    set_content_length(&opt, buf_len);
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, header_cb);
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void *)self->etags);
 
@@ -149,12 +155,12 @@ ufile_multiple_upload_part(struct ufile_mutipart_state *self, char *buffer, size
     curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
     curl_easy_setopt(curl, CURLOPT_READDATA, &body);
     curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)buf_len);
-    opt->header = curl_slist_append(opt->header, "Expect: ");
+    opt.header = curl_slist_append(opt.header, "Expect: ");
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
 
-    set_curl_options(curl, opt);
+    set_curl_options(curl, &opt);
     error = curl_do(curl);
-    http_cleanup(curl, opt);
+    http_cleanup(curl, &opt);
     return error;
 }
 
@@ -168,12 +174,12 @@ ufile_multiple_upload_finish(struct ufile_mutipart_state *self){
         return error;
     }
 
-    struct http_options *opt;
+    struct http_options opt;
     char query[64]={0};
     sprintf(query, "uploadId=%s",self->upload_id);
     error = set_http_options(&opt, "POST", "", self->bucket, self->key, query);
     if(UFILE_HAS_ERROR(error.code)){
-        http_cleanup(curl, opt);
+        http_cleanup(curl, &opt);
         return error;
     }
 
@@ -182,18 +188,18 @@ ufile_multiple_upload_finish(struct ufile_mutipart_state *self){
     struct etag_slist *list = self->etags;
     body.buffer = list->etag_buf;
     body.buffer_size = list->pos;
-    set_content_length(opt, body.buffer_size);
+    set_content_length(&opt, body.buffer_size);
     curl_easy_setopt(curl, CURLOPT_READFUNCTION, http_read_cb);
     curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L);
     curl_easy_setopt(curl, CURLOPT_READDATA, &body);
     curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)body.buffer_size);
-    opt->header = curl_slist_append(opt->header, "Expect: ");
+    opt.header = curl_slist_append(opt.header, "Expect: ");
 
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
-    set_curl_options(curl, opt);
+    set_curl_options(curl, &opt);
 
     error = curl_do(curl);
-    http_cleanup(curl, opt);
+    http_cleanup(curl, &opt);
     free_state(self);
     return error;
 }
@@ -209,20 +215,20 @@ ufile_multiple_upload_abort(struct ufile_mutipart_state *self){
         return error;
     }
 
-    struct http_options *opt;
+    struct http_options opt;
     char query[64]={0};
     sprintf(query, "uploadId=%s",self->upload_id);
     error = set_http_options(&opt, "DELETE", "", self->bucket, self->key, query);
     if(UFILE_HAS_ERROR(error.code)){
-        http_cleanup(curl, opt);
+        http_cleanup(curl, &opt);
         return error;
     }
 
-    set_curl_options(curl, opt);
+    set_curl_options(curl, &opt);
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
 
     error = curl_do(curl);
-    http_cleanup(curl, opt);
+    http_cleanup(curl, &opt);
     free_state(self);
 
     return error;

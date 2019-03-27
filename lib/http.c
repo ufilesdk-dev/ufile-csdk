@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <time.h>
 #include "string_util.h"
 #include "auth.h"
+#include "encoding.h"
 
 #define USERAGENT ("UFile CSDK/2.0.0")
 
@@ -11,7 +13,7 @@ extern struct ufile_config *_global_config;
 extern int _g_debug_open;
 
 struct ufile_error
-set_http_options(struct http_options **opt, 
+set_http_options(struct http_options *opt, 
                  const char *method,
                  const char *mime_type,
                  const char *bucket,
@@ -19,36 +21,47 @@ set_http_options(struct http_options **opt,
                  const char *query) {
     struct ufile_error error = NO_ERROR;
     struct ufile_config *cfg = _global_config;
+
     if (cfg == NULL){
         error.code = UFILE_CONFIG_ERROR_CODE;
         error.message = "global configuration has not been initialization yet.";
         return error;
     }
-    struct http_options *tmp = (struct http_options*)malloc(sizeof(struct http_options));
-    tmp->header = NULL;
 
+    if(strlen(bucket) == 0){
+        error.code = UFILE_CONFIG_ERROR_CODE;
+        error.message = "bucket connot be empty";
+        return error;
+    }
+
+    if(strlen(key) == 0){
+        error.code = UFILE_CONFIG_ERROR_CODE;
+        error.message = "key connot be empty";
+        return error;
+    }
+
+    opt->header = NULL;
     char *buf;
     if (strlen(mime_type) != 0){
         buf = ufile_strconcat("Content-Type: ", mime_type);
-        tmp->header = curl_slist_append(tmp->header, buf);
+        opt->header = curl_slist_append(opt->header, buf);
         free(buf);
     }
-    tmp->header = curl_slist_append(tmp->header, "User-Agent: UFile CSDK/2.0.0");
+    opt->header = curl_slist_append(opt->header, "User-Agent: UFile CSDK/2.0.0");
 
     char *auth = ufile_file_authorization(cfg->public_key,cfg->private_key,method, bucket, key, mime_type,"","");
     buf = ufile_strconcat("Authorization: ", auth, NULL); 
-    tmp->header = curl_slist_append(tmp->header, buf);
+    opt->header = curl_slist_append(opt->header, buf);
     free(auth); 
     free(buf);
 
-    tmp->method = ufile_strconcat(method, NULL);
+    opt->method = ufile_strconcat(method, NULL);
     if(query != NULL){
-        tmp->url = ufile_strconcat(bucket, ".", cfg->file_host, "/", key, "?", query, NULL);
+        opt->url = ufile_strconcat(bucket, ".", cfg->file_host, "/", key, "?", query, NULL);
     }else{
-        tmp->url = ufile_strconcat(bucket, ".", cfg->file_host, "/", key, NULL);
+        opt->url = ufile_strconcat(bucket, ".", cfg->file_host, "/", key, NULL);
     }
 
-    *opt = tmp;
     return error;
 }
 
@@ -85,7 +98,6 @@ http_cleanup(CURL *curl,
         if(opt->header != NULL){
             curl_slist_free_all(opt->header);
         }
-        free(opt);
     }
 }
 
@@ -120,7 +132,9 @@ size_t http_write_cb(char *ptr, size_t size, size_t nmemb, void *user_data) {
         return 0;
     }
     if(param->f != NULL){
-        return fwrite(ptr, size, nmemb, param->f);
+        size_t nc = fwrite(ptr, size, nmemb, param->f);
+        param->pos_n += nc;
+        return nc;
     }
     size_t remain_size = param->buffer_size - param->pos_n;
     if(remain_size <= 0){ 
@@ -131,7 +145,7 @@ size_t http_write_cb(char *ptr, size_t size, size_t nmemb, void *user_data) {
         memcpy(param->buffer+param->pos_n, ptr, curl_writen_size);
         param->pos_n += curl_writen_size;
         return curl_writen_size;
-    }else{//要写的数据还在超出了 buffer 的范围，把 buffer 写满即可。
+    }else{//要写的数据超出了 buffer 的范围，把 buffer 写满即可。
         memcpy(param->buffer+param->pos_n, ptr, remain_size);
         param->pos_n += remain_size;
         return remain_size;
@@ -146,6 +160,7 @@ size_t http_read_cb(char *ptr, size_t size, size_t nitems, void *user_data) {
 
     if(param->f != NULL){
         size_t nc = fread(ptr, size, nitems, param->f);
+        param->pos_n += nc;
         return nc;
     }
 
@@ -172,4 +187,63 @@ set_escaped_url(CURL *curl, struct http_options *opt, const char* query){
     opt->url = ufile_strconcat(opt->url, "?", query, NULL);
     free(t);
     curl_free(escaped_str);
+}
+
+struct ufile_error
+set_download_options(
+    CURL *curl,
+    const char* bucket,
+    const char* key,
+    size_t start_pos,
+    size_t end_pos)
+{
+    struct ufile_error error = NO_ERROR;
+    struct ufile_config *cfg = _global_config;
+
+    if (cfg == NULL){
+        error.code = UFILE_CONFIG_ERROR_CODE;
+        error.message = "global configuration has not been initialization yet.";
+        return error;
+    }
+
+    if(strlen(bucket) == 0){
+        error.code = UFILE_CONFIG_ERROR_CODE;
+        error.message = "bucket connot be empty";
+        return error;
+    }
+
+    if(strlen(key) == 0){
+        error.code = UFILE_CONFIG_ERROR_CODE;
+        error.message = "key connot be empty";
+        return error;
+    }
+
+    char tmp[64]={0};
+    long long now = (long long)time(NULL);
+    now += 24*60*60;  //tomorrow
+    now = 1553702400;
+    sprintf(tmp, "%lld", now);
+    char *signature = ufile_download_authorization(cfg->private_key, bucket, key, "GET", tmp, "", "");
+
+    char escaped_pubkey[128]={0};
+    query_escape(escaped_pubkey, cfg->public_key, 0);
+    char escaped_signature[32]={0};
+    query_escape(escaped_signature, signature, 0);
+
+    char query[256]={0};
+    sprintf(query, "UCloudPublicKey=%s&Signature=%s&Expires=%lld", 
+            escaped_pubkey,escaped_signature,now);
+    char url[256] = {0};
+    sprintf(url, "%s.%s/%s?%s", bucket, _global_config->file_host, key, query);
+    free(signature);
+
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, "GET");
+
+    if(_g_debug_open != 0){
+        curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
+    }
+    curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
+
+    return error;
 }

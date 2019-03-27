@@ -20,12 +20,22 @@ struct http_body{
 
 
 struct ufile_error
-set_http_options(struct http_options **opt, 
+set_http_options(struct http_options *opt, 
                  const char *method,
                  const char *mime_type,
                  const char *bucket,
                  const char *key,
                  const char *query);
+
+struct ufile_error
+set_download_options(
+    CURL *curl,
+    const char* bucket,
+    const char* key,
+    size_t start_pos,
+    size_t start_end
+);
+
 void
 set_curl_options(CURL *curl, struct http_options *opt);
 

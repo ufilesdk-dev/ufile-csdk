@@ -28,7 +28,7 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "打开文件失败, 错误信息为: %s\n", strerror(errno));
         return 1;
     }
-    error = ufile_put_file("lapd", "test", "", fp);
+    error = ufile_put_file("echotest2", "test", "", fp);
     if UFILE_HAS_ERROR(error.code) {
         printf("调用 put 失败，错误信息为：%s\n", error.message);
     }else{
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]){
     char *buf = malloc(file_size);
     fseek(fp, 0, SEEK_SET);
     fread(buf, 1, file_size, fp);
-    error = ufile_put_buf("lapd", "hello", "", buf, file_size);
+    error = ufile_put_buf("echotest2", "hello", "", buf, file_size);
     if UFILE_HAS_ERROR(error.code) {
         printf("调用 put_buf 失败，错误信息为：%s\n", error.message);
     }else{

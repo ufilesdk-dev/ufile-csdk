@@ -35,19 +35,19 @@ ufile_head(const char* bucket, const char *key, struct ufile_file_info *info){
         return error;
     }
 
-    struct http_options *opt;
+    struct http_options opt;
     error = set_http_options(&opt, "HEAD", "", bucket, key, NULL);
     if(UFILE_HAS_ERROR(error.code)){
-        http_cleanup(curl, opt);
+        http_cleanup(curl, &opt);
         return error;
     }
 
-    set_curl_options(curl, opt);
+    set_curl_options(curl, &opt);
     curl_easy_setopt(curl, CURLOPT_HEADERFUNCTION, head_header_cb);
     curl_easy_setopt(curl, CURLOPT_HEADERDATA, (void *)info);
     curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
 
     error = curl_do(curl);
-    http_cleanup(curl, opt);
+    http_cleanup(curl, &opt);
     return error;
 }

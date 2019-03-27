@@ -1,4 +1,3 @@
-
 #include "../lib/api.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +18,6 @@ int main(int argc, char *argv[]){
     cfg.bucket_host = "api.ucloud.cn";
     cfg.file_host = "cn-bj.ufileos.com";
 
-
     printf("正在初始化 SDK ......\n");
     struct ufile_error error;
     error = ufile_sdk_initialize(cfg, 0);
@@ -31,7 +29,7 @@ int main(int argc, char *argv[]){
 
     printf("调用 (mput)分片 上传文件.....\n");
     struct ufile_mutipart_state state;
-    error = ufile_multiple_upload_init(&state, "lapd", "multiple_upload", "");
+    error = ufile_multiple_upload_init(&state, "echotest2", "multiple_upload", "");
     if(UFILE_HAS_ERROR(error.code)){
         ufile_sdk_cleanup();
         printf("调用 ufile_multiple_upload_init 失败，错误信息为：%d, %s\n", error.code, error.message);

@@ -55,7 +55,7 @@ int main(int argc, char *argv[]){
     if UFILE_HAS_ERROR(error.code) {
         printf("调用 head 失败，错误信息为：%s\n", error.message);
     }else{
-        printf("调用 head 成功，文件信息为： size=%ld, etag=%s, mime-type=%s",
+        printf("调用 head 成功，文件信息为： size=%lld, etag=%s, mime-type=%s",
                 file_info.bytes_len, file_info.etag, file_info.mime_type);
     }
     ufile_free_file_info(file_info);
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]){
     }else{
         printf("调用 PUT 成功");
     }
-    close(fp);
+    fclose(fp);
 
     ufile_sdk_cleanup();
     return 0;

@@ -701,3 +701,75 @@ end:
 int is_blank(char c) {
     return ((c == ' ') || (c == '\t'));
 }
+
+
+
+
+//************************************************URL Query escape************************************
+int should_escape(int c){
+	switch(c){
+	case '$':
+    case '&':
+    case '+':
+    case ',':
+    case ':':
+    case ';':
+    case '=':
+    case '?':
+    case '@': 
+        return 1;
+	}
+
+	return 0;
+}
+
+void
+query_escape(char *out, const char* query, unsigned int query_len){
+    if(query_len == 0){
+        query_len = strlen(query);
+    }
+	int spaceCount = 0;
+    int hexCount = 0;
+    char *ret_s = out;
+	for(int i = 0; i < query_len; i++){
+		int c = query[i];
+		if(should_escape(c)){
+			if(c == ' '){
+				spaceCount++;
+			} else {
+				hexCount++;
+			}
+		}
+	}
+	if(spaceCount == 0 && hexCount == 0){
+        memcpy(ret_s, query, query_len);
+		return;
+	}
+
+	if(hexCount == 0){
+        memcpy(ret_s, query, query_len);
+		for(int i = 0; i < query_len; i++){
+			if(query[i] == ' '){
+				ret_s[i] = '+';
+			}
+		}
+		return;
+	}
+
+    int j = 0;
+    for(int i = 0; i < query_len; i++){
+        int c = query[i];
+        if(c== ' '){
+            ret_s[i] = '+';
+            j++;
+        }else if(should_escape(c)){
+			ret_s[j] = '%';
+			ret_s[j+1] = "0123456789ABCDEF"[c>>4];
+			ret_s[j+2] = "0123456789ABCDEF"[c&15];
+			j += 3;
+        }else{
+			ret_s[j] = query[i];
+			j++;
+        }
+	}
+}
