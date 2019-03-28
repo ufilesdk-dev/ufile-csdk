@@ -19,3 +19,6 @@ target_link_libraries(mput ${DEPEND_LIB})
 
 add_executable(download download.c) 
 target_link_libraries(download ${DEPEND_LIB})
+
+add_executable(bucket bucket.c) 
+target_link_libraries(bucket ${DEPEND_LIB})

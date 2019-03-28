@@ -6,6 +6,7 @@
 
 
 //内部使用，不多介绍。
-char* ufile_strconcat(const char* s1, ...);
+char* 
+ufile_strconcat(const char* s1, ...);
 
 #endif

@@ -1,13 +1,21 @@
 #ifndef __UFILE_ENCODING_H_
 #define __UFILE_ENCODING_H_
 
+#define HMAC_LEN 20
+
 void 
-HMAC_SHA1(unsigned char hmac[20]
-    , const unsigned char *key
-    , int key_len
-    , const unsigned char *message
-    , int message_len
+HMAC_SHA1(unsigned char hmac[HMAC_LEN], 
+          const unsigned char *key, 
+          int key_len,
+          const unsigned char *message,
+          int message_len
 );
+
+void SHA1(unsigned char hmac[HMAC_LEN],const unsigned char *message,
+          int message_len);
+
+void 
+HMAC2HEX(unsigned char hmac[HMAC_LEN], char* out);
 
 int 
 base64decode_len(const char *bufcoded);

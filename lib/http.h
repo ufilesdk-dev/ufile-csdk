@@ -2,9 +2,8 @@
 #define __UFILE_HTTP_H_
 
 #include <curl/curl.h>
-#include "types.h"
 
-
+//内部使用，不多介绍。
 struct http_options{
     char *method;
     char * url;

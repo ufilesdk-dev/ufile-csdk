@@ -113,6 +113,8 @@ ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket
         }
         item=item->next;
     }
+    cJSON_Delete(json);
+
     self->bucket = ufile_strconcat(bucket, NULL);
     self->key = ufile_strconcat(key, NULL);
     self->etags = malloc(sizeof(struct etag_slist));

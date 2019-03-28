@@ -505,7 +505,7 @@ static void SHA1_final(unsigned char digest[20], SHA1Context *context) {
 // IPAD - 0x363636...
 //
 // HMAC(K,m) = SHA1((K ^ OPAD) . SHA1((K ^ IPAD) . m))
-void HMAC_SHA1(unsigned char hmac[20], const unsigned char *key, int key_len,
+void HMAC_SHA1(unsigned char hmac[HMAC_LEN], const unsigned char *key, int key_len,
                const unsigned char *message, int message_len) {
     unsigned char kopad[64], kipad[64];
     int i;
@@ -536,6 +536,24 @@ void HMAC_SHA1(unsigned char hmac[20], const unsigned char *key, int key_len,
     SHA1_init(&context);
     SHA1_update(&context, kopad, 64);
     SHA1_update(&context, digest, 20);
+    SHA1_final(hmac, &context);
+}
+
+void 
+HMAC2HEX(unsigned char hmac[HMAC_LEN], char* out){
+    int i;
+    for(i=0; i<HMAC_LEN; i++){
+        out[i*2]   = "0123456789abcdef"[hmac[i] >> 4];
+		out[i*2+1] = "0123456789abcdef"[hmac[i] & 0x0F];
+    }
+}
+void SHA1(unsigned char hmac[HMAC_LEN],
+          const unsigned char *message,
+          int message_len)
+{
+    SHA1Context context;
+    SHA1_init(&context);
+    SHA1_update(&context, message, message_len);
     SHA1_final(hmac, &context);
 }
 
@@ -731,7 +749,8 @@ query_escape(char *out, const char* query, unsigned int query_len){
 	int spaceCount = 0;
     int hexCount = 0;
     char *ret_s = out;
-	for(int i = 0; i < query_len; i++){
+    int i;
+	for(i = 0; i < query_len; i++){
 		int c = query[i];
 		if(should_escape(c)){
 			if(c == ' '){
@@ -748,7 +767,7 @@ query_escape(char *out, const char* query, unsigned int query_len){
 
 	if(hexCount == 0){
         memcpy(ret_s, query, query_len);
-		for(int i = 0; i < query_len; i++){
+		for(i = 0; i < query_len; i++){
 			if(query[i] == ' '){
 				ret_s[i] = '+';
 			}
@@ -757,7 +776,7 @@ query_escape(char *out, const char* query, unsigned int query_len){
 	}
 
     int j = 0;
-    for(int i = 0; i < query_len; i++){
+    for(i = 0; i < query_len; i++){
         int c = query[i];
         if(c== ' '){
             ret_s[i] = '+';

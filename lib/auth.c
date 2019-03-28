@@ -5,8 +5,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-const int HMAC_LEN = 21;
-
 char * ufile_file_authorization(const char *public_key, const char *private_key,
                                 const char *method, const char *bucket, 
                                 const char *key, const char *mime_type,

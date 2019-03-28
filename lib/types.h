@@ -13,13 +13,13 @@ struct ufile_error{
 	const char* message;
 };
 
-#define STR_HELPER(x) #x
-#define STR(x) STR_HELPER(x)
-
 #define UFILE_OK  0
 #define UFILE_ERROR_CODE -1
 #define UFILE_CONFIG_ERROR_CODE -2
 #define UFILE_MULTIPLE_INIT_ERROR_CODE -3
+
+#define UFILE_BUCKET_REQ_ERROR_CODE -10
+
 #define CURL_ERROR_CODE -20
 
 #define NO_ERROR {0, ""} 

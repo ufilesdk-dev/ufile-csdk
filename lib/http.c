@@ -6,6 +6,7 @@
 #include "string_util.h"
 #include "auth.h"
 #include "encoding.h"
+#include "api.h"
 
 #define USERAGENT ("UFile CSDK/2.0.0")
 

@@ -5,8 +5,6 @@
 #include <string.h>
 #include "helper.h"
 
-#define CONFIG_FILE "./config.json"
-
 int main(int argc, char *argv[]){
     struct ufile_config cfg;
     cfg.public_key = getenv("UFILE_PUBLIC_KEY");

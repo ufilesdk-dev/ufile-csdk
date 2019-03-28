@@ -5,8 +5,6 @@
 #include <string.h>
 #include "helper.h"
 
-#define CONFIG_FILE "./config.json"
-
 int main(int argc, char *argv[]){
     if(argc < 2){
         printf("请输入一个文件路径！！！！");
@@ -38,7 +36,8 @@ int main(int argc, char *argv[]){
 
     FILE *fp = fopen(argv[1], "rb");
     char *buf = malloc(state.part_size);
-    for(int i=0; ; i++){
+    int i;
+    for(i=0; ; i++){
         size_t nc = fread(buf, 1, state.part_size, fp);
         if(nc == 0){
             break;
