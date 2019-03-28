@@ -25,7 +25,7 @@ cd build;
 ```
 
 ## 功能说明
-[lib/api.h](https://github.com/ufilesdk-dev/ufile-csdk/blob/master/lib/api.h) 里面是所有暴露出来的接口，每个接口的注释就是使用说明。  
+[lib/api.h](https://github.com/ufilesdk-dev/ufile-csdk/blob/master/lib/api.h) 里面是所有暴露出来的接口，每个接口的注释就是使用说明。强烈建议您在使用钱仔细阅读接口说明，以节省您的 debug 时间。  
 本 SDK 的功能对应的接口名称如下：  
 **全局 SDK 初始化** ufile_sdk_initialize   
 **全局 SDK 清理** ufile_sdk_cleanup   
