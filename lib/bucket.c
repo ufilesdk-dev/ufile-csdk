@@ -29,7 +29,6 @@ parse_error(struct bucket_resp *br){
     if(br->code == 0){
         return error;
     }
-    printf("RetCode is=%d, message=%s\n", br->code, br->msg);
     error.code = UFILE_BUCKET_REQ_ERROR_CODE; 
     if(br->code >= 15005 &&  br->code <= 15007){
         error.message="Operation failed, please try again later.";
