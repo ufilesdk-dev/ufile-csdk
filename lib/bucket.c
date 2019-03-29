@@ -102,7 +102,7 @@ bucket_request_do(CURL *curl, const char* url, struct bucket_resp *br){
     error = curl_do(curl);
     cJSON *json = cJSON_Parse(response_body.buffer);
     if(json==NULL){
-        error.code = UFILE_MULTIPLE_INIT_ERROR_CODE;
+        error.code = UFILE_BUCKET_REQ_ERROR_CODE;
         error.message = cJSON_GetErrorPtr();
         return error;
     }
