@@ -11,7 +11,8 @@ HMAC_SHA1(unsigned char hmac[HMAC_LEN],
           int message_len
 );
 
-void SHA1(unsigned char hmac[HMAC_LEN],const unsigned char *message,
+void SHA1(unsigned char hmac[HMAC_LEN],
+          const unsigned char *message,
           int message_len);
 
 void 

@@ -9,6 +9,7 @@
 #include "api.h"
 
 #define USERAGENT ("UFile CSDK/2.0.0")
+#define HTTP_IS_OK(CODE) ((CODE)/100 == 2)
 
 extern struct ufile_config *_global_config;
 extern int _g_debug_open;
@@ -115,12 +116,12 @@ curl_do(CURL *curl){
     long response_code;
     if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code) != CURLE_OK){
         error.code = CURL_ERROR_CODE;
-        error.message = CURL_RESPONSE_CODE_ERROR_MSG;
+        error.message = "Get curl response code failed.";
         return error;
     }
 
     if (!HTTP_IS_OK(response_code)){
-        error.message = HTTP_ERROR_MSG;
+        error.message = "http is not OK, check the code as HTTP code.";
     }
     error.code = response_code;
     return error;

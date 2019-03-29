@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
-#include "helper.h"
 
 #define fourMegabyte 1 << 22 //4M
 

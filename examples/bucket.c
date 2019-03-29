@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "helper.h"
 
 void randstring(char *out,  size_t length){
     static char charset[] = "abcdefghijklmnopqrstuvwxyz";

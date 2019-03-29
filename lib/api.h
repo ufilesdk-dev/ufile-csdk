@@ -9,6 +9,7 @@ extern "C" {
 //*******************************common data********************************
 //ufile 返回的数据结构，HTTP 请求返回码也会包含在内。
 //如果你需要查看更详细的信息，可以在调用 ufile_sdk_initialize 时把 open_verbose 设为 1 即可。
+//相关的信息会被打印到 stdout。
 struct ufile_error{
     int code;
 	const char* message;
@@ -18,18 +19,12 @@ struct ufile_error{
 #define UFILE_ERROR_CODE -1
 #define UFILE_CONFIG_ERROR_CODE -2
 #define UFILE_MULTIPLE_INIT_ERROR_CODE -3
-
 #define UFILE_BUCKET_REQ_ERROR_CODE -10
-
 #define CURL_ERROR_CODE -20
 
 #define NO_ERROR {0, ""} 
-
-#define HTTP_ERROR_MSG "http is not OK, check the code as HTTP code."
-#define CURL_RESPONSE_CODE_ERROR_MSG "Get curl response code failed."
 #define CURL_INIT_ERROR_MSG "init curl failed."
 
-#define HTTP_IS_OK(CODE) ((CODE)/100 == 2)
 #define UFILE_HAS_ERROR(CODE) ((CODE) != 0 && (CODE)/100 != 2 )
 //****************************************************************** end
 
@@ -45,9 +40,11 @@ struct ufile_config{
     //用于创建和删除 bucket 一般为 api.ucloud.cn
     const char *bucket_host;  //json: bucket_host
 };
+
 //从 json string('\0' 结束) 里面解析出一个配置文件，使用本接口你必须要使用 ufile_free_config 释放内存。 
 extern struct ufile_error
 ufile_load_config_from_json(const char* json_buf, struct ufile_config *cfg);
+
 //释放从 ufile_load_config_from_json 分片的内存，与 ufile_load_config_from_json 接口成对使用。
 extern void 
 ufile_free_config(struct ufile_config cfg);
@@ -113,6 +110,7 @@ ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket
 //part_number 是分片在文件中的位置，从 0 开始。
 extern struct ufile_error
 ufile_multiple_upload_part(struct ufile_mutipart_state *self, char *buffer, size_t buf_len, int part_number);
+
 //完成分片上传
 extern struct ufile_error
 ufile_multiple_upload_finish(struct ufile_mutipart_state *self);
