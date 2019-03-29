@@ -14,8 +14,12 @@ print_header(struct curl_slist* header){
 }
 
 struct ufile_error
-ufile_put_buf(const char* bucket, const char *key, const char *mime_type, char *buffer, size_t buf_len){
+ufile_put_buf(const char* bucket_name, const char *key, const char *mime_type, char *buffer, size_t buf_len){
     struct ufile_error error = NO_ERROR;
+    error = check_bucket_key(bucket_name, key);
+    if(UFILE_HAS_ERROR(error.code)){
+        return error;
+    }
     CURL *curl = curl_easy_init();
     if(curl == NULL){
         error.code = CURL_ERROR_CODE;
@@ -23,7 +27,7 @@ ufile_put_buf(const char* bucket, const char *key, const char *mime_type, char *
     }
 
     struct http_options opt;
-    error = set_http_options(&opt, "PUT", mime_type, bucket, key, NULL);
+    error = set_http_options(&opt, "PUT", mime_type, bucket_name, key, NULL);
     if(UFILE_HAS_ERROR(error.code)){
         http_cleanup(curl, &opt);
         return error;
@@ -46,8 +50,12 @@ ufile_put_buf(const char* bucket, const char *key, const char *mime_type, char *
 }
 
 struct ufile_error
-ufile_put_file(const char* bucket, const char *key, const char *mime_type, FILE *file){
+ufile_put_file(const char* bucket_name, const char *key, const char *mime_type, FILE *file){
     struct ufile_error error = NO_ERROR;
+    error = check_bucket_key(bucket_name, key);
+    if(UFILE_HAS_ERROR(error.code)){
+        return error;
+    }
     CURL *curl = curl_easy_init();
     if(curl == NULL){
         error.code = CURL_ERROR_CODE;
@@ -55,7 +63,7 @@ ufile_put_file(const char* bucket, const char *key, const char *mime_type, FILE 
     }
 
     struct http_options opt;
-    error = set_http_options(&opt, "PUT", mime_type, bucket, key, NULL);
+    error = set_http_options(&opt, "PUT", mime_type, bucket_name, key, NULL);
     if(UFILE_HAS_ERROR(error.code)){
         http_cleanup(curl, &opt);
         return error;

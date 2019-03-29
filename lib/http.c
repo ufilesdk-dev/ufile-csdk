@@ -123,7 +123,11 @@ curl_do(CURL *curl){
     if (!HTTP_IS_OK(response_code)){
         error.message = "http is not OK, check the code as HTTP code.";
     }
+
     error.code = response_code;
+    if(error.code == 404){
+        error.message = "File not found.";
+    }
     return error;
 }
 
@@ -223,7 +227,6 @@ set_download_options(
     char tmp[64]={0};
     long long now = (long long)time(NULL);
     now += 24*60*60;  //tomorrow
-    now = 1553702400;
     sprintf(tmp, "%lld", now);
     char *signature = ufile_download_authorization(cfg->private_key, bucket, key, "GET", tmp, "", "");
 
@@ -247,5 +250,22 @@ set_download_options(
     }
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 
+    return error;
+}
+
+struct ufile_error
+check_bucket_key(const char *bucket_name, const char *key){
+    struct ufile_error error=NO_ERROR;
+    if(!bucket_name || *bucket_name == '\0'){
+        error.code = UFILE_PARAM_ERROR_CODE;
+        error.message = "bucket_name cannot be nil.";
+        return error;
+    }
+
+    if(!key || *key == '\0'){
+        error.code = UFILE_PARAM_ERROR_CODE;
+        error.message = "key cannot be nil.";
+        return error;
+    }
     return error;
 }

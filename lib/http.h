@@ -35,6 +35,9 @@ set_download_options(
     size_t start_end
 );
 
+struct ufile_error
+check_bucket_key(const char *bucket_name, const char *key);
+
 void
 set_curl_options(CURL *curl, struct http_options *opt);
 

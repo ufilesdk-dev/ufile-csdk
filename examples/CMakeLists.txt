@@ -22,3 +22,6 @@ target_link_libraries(download ${DEPEND_LIB})
 
 add_executable(bucket bucket.c) 
 target_link_libraries(bucket ${DEPEND_LIB})
+
+add_executable(delete delete.c) 
+target_link_libraries(delete ${DEPEND_LIB})

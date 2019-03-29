@@ -57,7 +57,7 @@ header_cb(char *buffer, size_t size, size_t nitems, void *userdata){
 static void
 free_state(struct ufile_mutipart_state *state){
     free((char*)state->key);
-    free((char*)state->bucket);
+    free((char*)state->bucket_name);
     free((char*)state->upload_id);
 
     struct etag_slist *list = state->etags;
@@ -66,8 +66,12 @@ free_state(struct ufile_mutipart_state *state){
 }
 
 struct ufile_error
-ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket, const char *key, const char* mime_type){
+ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket_name, const char *key, const char* mime_type){
     struct ufile_error error=NO_ERROR;
+    error = check_bucket_key(bucket_name, key);
+    if(UFILE_HAS_ERROR(error.code)){
+        return error;
+    }
     CURL *curl = curl_easy_init();
     if(curl == NULL){
         error.code = CURL_ERROR_CODE;
@@ -76,7 +80,7 @@ ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket
     }
 
     struct http_options opt;
-    error = set_http_options(&opt, "POST", mime_type, bucket, key, "uploads");
+    error = set_http_options(&opt, "POST", mime_type, bucket_name, key, "uploads");
     if(UFILE_HAS_ERROR(error.code)){
         http_cleanup(curl, &opt);
         return error;
@@ -115,13 +119,12 @@ ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket
     }
     cJSON_Delete(json);
 
-    self->bucket = ufile_strconcat(bucket, NULL);
+    self->bucket_name = ufile_strconcat(bucket_name, NULL);
     self->key = ufile_strconcat(key, NULL);
     self->etags = malloc(sizeof(struct etag_slist));
     self->etags->cap = 0;
     self->etags->pos = 0;
     self->etags->etag_buf = NULL;
-    //self->etags->mutex = PTHREAD_MUTEX_INITIALIZER;
     pthread_mutex_init(&self->etags->mutex, NULL);
     return error;
 }
@@ -139,7 +142,7 @@ ufile_multiple_upload_part(struct ufile_mutipart_state *self, char *buffer, size
     struct http_options opt;
     char query[64]={0};
     sprintf(query, "partNumber=%d&uploadId=%s", part_number, self->upload_id);
-    error = set_http_options(&opt, "PUT", "", self->bucket, self->key, query);
+    error = set_http_options(&opt, "PUT", "", self->bucket_name, self->key, query);
     if(UFILE_HAS_ERROR(error.code)){
         http_cleanup(curl, &opt);
         return error;
@@ -179,7 +182,7 @@ ufile_multiple_upload_finish(struct ufile_mutipart_state *self){
     struct http_options opt;
     char query[64]={0};
     sprintf(query, "uploadId=%s",self->upload_id);
-    error = set_http_options(&opt, "POST", "", self->bucket, self->key, query);
+    error = set_http_options(&opt, "POST", "", self->bucket_name, self->key, query);
     if(UFILE_HAS_ERROR(error.code)){
         http_cleanup(curl, &opt);
         return error;
@@ -220,7 +223,7 @@ ufile_multiple_upload_abort(struct ufile_mutipart_state *self){
     struct http_options opt;
     char query[64]={0};
     sprintf(query, "uploadId=%s",self->upload_id);
-    error = set_http_options(&opt, "DELETE", "", self->bucket, self->key, query);
+    error = set_http_options(&opt, "DELETE", "", self->bucket_name, self->key, query);
     if(UFILE_HAS_ERROR(error.code)){
         http_cleanup(curl, &opt);
         return error;

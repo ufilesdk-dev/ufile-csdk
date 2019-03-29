@@ -19,7 +19,7 @@ int main(int argc, char *argv[]){
 
     printf("正在初始化 SDK ......\n");
     struct ufile_error error;
-    error = ufile_sdk_initialize(cfg, 0);
+    error = ufile_sdk_initialize(cfg, 1);
     if(UFILE_HAS_ERROR(error.code)){
         ufile_sdk_cleanup();
         printf("初始化 sdk 失败，错误信息为：%s\n", error.message);

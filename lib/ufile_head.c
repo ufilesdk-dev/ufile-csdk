@@ -26,8 +26,13 @@ static size_t head_header_cb(char *buffer, size_t size, size_t nitems, void *use
 }
 
 struct ufile_error
-ufile_head(const char* bucket, const char *key, struct ufile_file_info *info){
+ufile_head(const char* bucket_name, const char *key, struct ufile_file_info *info){
     struct ufile_error error = NO_ERROR;
+    error = check_bucket_key(bucket_name, key);
+    if(UFILE_HAS_ERROR(error.code)){
+        return error;
+    }
+
     CURL *curl = curl_easy_init();
     if(curl == NULL){
         error.code = CURL_ERROR_CODE;
@@ -36,7 +41,7 @@ ufile_head(const char* bucket, const char *key, struct ufile_file_info *info){
     }
 
     struct http_options opt;
-    error = set_http_options(&opt, "HEAD", "", bucket, key, NULL);
+    error = set_http_options(&opt, "HEAD", "", bucket_name, key, NULL);
     if(UFILE_HAS_ERROR(error.code)){
         http_cleanup(curl, &opt);
         return error;

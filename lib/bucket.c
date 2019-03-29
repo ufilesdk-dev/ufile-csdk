@@ -32,50 +32,52 @@ parse_error(struct bucket_resp *br){
     printf("RetCode is=%d, message=%s\n", br->code, br->msg);
     error.code = UFILE_BUCKET_REQ_ERROR_CODE; 
     if(br->code >= 15005 &&  br->code <= 15007){
-        error.message="操作失败，请稍后重试。";
+        error.message="Operation failed, please try again later.";
+        return error;
     }
+
     switch(br->code){
     case 150:
-        error.message = "服务目前不可用，我们正在努力恢复中，请稍后重试。";
+        error.message = "This operation request has timed out, please retry later。";
         break;
     case 152:
-        error.message = "API 错误或后端不可用";
+        error.message = "API error or Service unavailable";
         break;
     case 171:
-        error.message = "签名错误。";
+        error.message = "Invalid signature.";
         break;
     case 172:
-        error.message = "该账号不存在。";
+        error.message = "The account does not exist.";
         break;
     case 173:
-        error.message = "账户限制";
+        error.message = "The account has been restricted.";
         break;
     case 15001:
-        error.message = "非法的 bucket name";
+        error.message = "Illegal bucket name.";
         break;
     case 15004:
-        error.message="服务目前不可用，我们正在努力恢复中，请稍后重试。";
+        error.message="This operation request has timed out, please retry later.";
         break;
     case 15023:
-        error.message="空间不为空，不可删除。";
+        error.message="The bucket does not empty, it can't delete.";
         break;
     case 15030:
-        error.message="您的CDN配额已满。";
+        error.message="Your CDN quota is full.";
         break;
     case 15037:
-        error.message="没有操作权限";
+        error.message="No permission.";
         break;
     case 15041:
-        error.message="用户未实名认证，无法创建bucket。";
+        error.message="User has not certified.";
         break;
     case 15051:
-        error.message="空间创建失败，配额不足。";
+        error.message="Bucket creation failure, quota is insufficient.";
         break;
     case 15052:
-        error.message="未解绑token,无法删除空间。";
+        error.message="The Token is unbound, it cannot delete.";
         break;
     default:
-        error.message="内部错误，请联系技术支持或提交工单。";
+        error.message="Internal error, please submit a ticket or contact support.";
         break;
     }
     return error;
@@ -134,7 +136,7 @@ ufile_bucket_cfg_validation(){
 
     if(strstr(_global_config->public_key, "TOKEN") != NULL){
         error.code = UFILE_CONFIG_ERROR_CODE;
-        error.message = "bucket 创建必须要公私钥，不支持 token。";
+        error.message = "bucket management does only support KEY, it doesn't support token。";
         return error;
     }
     return error;
@@ -160,19 +162,19 @@ ufile_bucket_create(const char *bucket_name, const char* region, const char* buc
        strcmp(bucket_type, "private") != 0)
     {
         error.code = UFILE_CONFIG_ERROR_CODE;
-        error.message = "bucket_type 必须为 public 或 private";
+        error.message = "bucket_type must be 'public' or 'private'";
         return error;
     }
 
     if(strlen(region) == 0){
         error.code = UFILE_CONFIG_ERROR_CODE;
-        error.message = "region 不能为空";
+        error.message = "region cannot be nil.";
         return error;
     }
 
     if(strlen(bucket_name) == 0){
         error.code = UFILE_CONFIG_ERROR_CODE;
-        error.message = "bucket_name 不能为空";
+        error.message = "bucket_name cannot be nil";
         return error;
     }
     char query[512];
@@ -215,7 +217,7 @@ ufile_bucket_delete(const char *bucket_name){
 
     if(strlen(bucket_name) == 0){
         error.code = UFILE_CONFIG_ERROR_CODE;
-        error.message = "bucket_name 不能为空";
+        error.message = "bucket_name cannot be nil.";
         return error;
     }
 
