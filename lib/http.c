@@ -89,7 +89,9 @@ set_content_length(struct http_options* opt, size_t length){
 void
 http_cleanup(CURL *curl,
              struct http_options *opt){
-    curl_easy_cleanup(curl);
+    if(curl != NULL){
+        curl_easy_cleanup(curl);
+    }
     if (opt != NULL){
         if(opt->method != NULL){
             free(opt->method);

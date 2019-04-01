@@ -25,3 +25,6 @@ target_link_libraries(bucket ${DEPEND_LIB})
 
 add_executable(delete delete.c) 
 target_link_libraries(delete ${DEPEND_LIB})
+
+add_executable(async_mput async_mput.c thpool.c) 
+target_link_libraries(async_mput ${DEPEND_LIB} pthread) #link pthread 库

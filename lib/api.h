@@ -20,6 +20,7 @@ struct ufile_error{
 #define UFILE_CONFIG_ERROR_CODE -2
 #define UFILE_MULTIPLE_INIT_ERROR_CODE -3
 #define UFILE_PARAM_ERROR_CODE -4
+#define UFILE_MULTIPLE_NOT_FINISH_ERROR_CODE -5
 #define UFILE_BUCKET_REQ_ERROR_CODE -10
 #define CURL_ERROR_CODE -20
 
@@ -104,6 +105,8 @@ struct ufile_mutipart_state{
     const char *upload_id;
     //分片的 etag 列表。内部数据结构，不可访问。
     struct etag_slist *etags;
+    //用于连接复用的 CURL，内部数据结构，不可访问。
+    struct curls_list *curls;
 };
 
 //初始化一个分片上传任务。 mime_type 可以为空。
@@ -113,6 +116,8 @@ ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket
 
 //上传一个分片， buf_len 的大小始终是 state.part_size, 除了最后一片可以为其他值以外。
 //part_number 是分片在文件中的位置，从 0 开始。
+//如果出现错误，请务必调用 ufile_multiple_upload_abort 清理相关资源。
+//所有分片传完后，请调用 ufile_multiple_upload_finish 完成分片上传。
 extern struct ufile_error
 ufile_multiple_upload_part(struct ufile_mutipart_state *self, char *buffer, size_t buf_len, int part_number);
 
