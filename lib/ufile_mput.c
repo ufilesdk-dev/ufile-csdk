@@ -86,10 +86,13 @@ append_etage(struct etag_slist *list, const char *etag, size_t etag_len){
 }
 
 #define ETAG_HEADER "Etag: "
+#define ETAG_HEADER1 "ETag: "
 static size_t 
 header_cb(char *buffer, size_t size, size_t nitems, void *userdata){
     buffer[nitems] = '\0';
-    if(strstr(buffer, ETAG_HEADER) != NULL){
+    if(strstr(buffer, ETAG_HEADER) != NULL ||
+       strstr(buffer, ETAG_HEADER1) != NULL)
+    {
         size_t buffer_size = nitems * size;
         struct etag_slist *list = (struct etag_slist*)userdata;
         size_t header_len = strlen(ETAG_HEADER);
