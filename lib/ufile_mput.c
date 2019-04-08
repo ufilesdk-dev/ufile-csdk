@@ -47,11 +47,10 @@ save_curl_handle(struct curls_list* L, struct list_node* node){
 
 static struct list_node*
 get_curl_handle(struct curls_list* L){
-    pthread_mutex_lock(&L->mutex);
     if(L==NULL || L->head == NULL){
-        pthread_mutex_unlock(&L->mutex);
         return NULL;
     }
+    pthread_mutex_lock(&L->mutex);
     struct list_node* h = L->head;
     L->head = h->next;
     h->next = NULL;
@@ -90,7 +89,6 @@ append_etage(struct etag_slist *list, const char *etag, size_t etag_len){
 static size_t 
 header_cb(char *buffer, size_t size, size_t nitems, void *userdata){
     buffer[nitems] = '\0';
-    char *p = NULL;
     if(strstr(buffer, ETAG_HEADER) != NULL){
         size_t buffer_size = nitems * size;
         struct etag_slist *list = (struct etag_slist*)userdata;
@@ -110,7 +108,7 @@ free_state(struct ufile_mutipart_state *state){
     free((char*)state->upload_id);
 
     struct etag_slist *list = state->etags;
-    free((char*)list->etag_buf);
+    free(list->etag_buf);
     free(list);
     struct curls_list *L = state->curls;
     struct list_node *h = L->head;
@@ -125,7 +123,7 @@ free_state(struct ufile_mutipart_state *state){
 
 struct ufile_error
 ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket_name, const char *key, const char* mime_type){
-    struct ufile_error error=NO_ERROR;
+    struct ufile_error error;
     error = check_bucket_key(bucket_name, key);
     if(UFILE_HAS_ERROR(error.code)){
         return error;
