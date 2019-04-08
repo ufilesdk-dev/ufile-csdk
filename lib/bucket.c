@@ -29,7 +29,7 @@ parse_error(struct bucket_resp *br){
     if(br->code == 0){
         return error;
     }
-    error.code = UFILE_BUCKET_REQ_ERROR_CODE; 
+    error.code = br->code;
     if(br->code >= 15005 &&  br->code <= 15007){
         error.message="Operation failed, please try again later.";
         return error;
@@ -50,6 +50,9 @@ parse_error(struct bucket_resp *br){
         break;
     case 173:
         error.message = "The account has been restricted.";
+        break;
+    case 15000:
+        error.message = "Duplicate bucket name, please input again.";
         break;
     case 15001:
         error.message = "Illegal bucket name.";
