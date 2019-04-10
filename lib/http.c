@@ -234,14 +234,10 @@ set_download_options(
 
     char escaped_pubkey[128]={0};
     query_escape(escaped_pubkey, cfg->public_key, 0);
-    char escaped_signature[32]={0};
-    query_escape(escaped_signature, signature, 0);
 
-    char query[256]={0};
-    sprintf(query, "UCloudPublicKey=%s&Signature=%s&Expires=%lld", 
-            escaped_pubkey,escaped_signature,now);
-    char url[256] = {0};
-    sprintf(url, "%s.%s/%s?%s", bucket, _global_config->file_host, key, query);
+    char url[512] = {0};
+    sprintf(url, "%s.%s/%s?UCloudPublicKey=%s&Signature=%s&Expires=%lld", bucket, _global_config->file_host, 
+                      key, escaped_pubkey,signature, now);
     free(signature);
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
