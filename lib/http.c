@@ -45,7 +45,7 @@ set_http_options(struct http_options *opt,
     opt->header = NULL;
     char *buf;
     if (strlen(mime_type) != 0){
-        buf = ufile_strconcat("Content-Type: ", mime_type);
+        buf = ufile_strconcat("Content-Type: ", mime_type, NULL);
         opt->header = curl_slist_append(opt->header, buf);
         free(buf);
     }
