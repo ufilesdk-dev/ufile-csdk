@@ -20,13 +20,14 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    printf("调用 put 上传文件 %s\n", argv[0]);
-    FILE *fp = fopen(argv[0], "rb");
+    printf("打开文件 %s\n", argv[0]);
+    FILE *fp = fopen("config.json", "rb");
     if (fp == NULL){
         fprintf(stderr, "打开文件失败, 错误信息为: %s\n", strerror(errno));
         return 1;
     }
-    error = ufile_put_file("echotest2", "test", "", fp);
+    printf("调用 put 上传文件 %s\n", argv[0]);
+    error = ufile_put_file("csdk-create-bucket", "config.json", "", fp);
     if UFILE_HAS_ERROR(error.code) {
         printf("调用 put 失败，错误信息为：%s\n", error.message);
     }else{
@@ -38,7 +39,7 @@ int main(int argc, char *argv[]){
     char *buf = malloc(file_size);
     fseek(fp, 0, SEEK_SET);
     fread(buf, 1, file_size, fp);
-    error = ufile_put_buf("echotest2", "hello", "", buf, file_size);
+    error = ufile_put_buf("csdk-create-bucket", "hello", "", buf, file_size);
     if UFILE_HAS_ERROR(error.code) {
         printf("调用 put_buf 失败，错误信息为：%s\n", error.message);
     }else{

@@ -5,10 +5,13 @@
 #include <string.h>
 
 int main(int argc, char *argv[]){
-    if(argc < 2){
-        printf("请输入一个文件 key!!!");
-        exit(1);
+   if (argc < 3) {
+       printf("请依次提供bucket_name、key_name\n"); 
+       return 1;
     }
+    char* bucket_name = argv[1];
+    char* key_name = argv[2];
+    printf("分片上传: bucket_name=%s key_name=%s \n", bucket_name, key_name);
 
     struct ufile_config cfg;
     cfg.public_key = getenv("UFILE_PUBLIC_KEY");
@@ -24,8 +27,8 @@ int main(int argc, char *argv[]){
         printf("初始化 sdk 失败，错误信息为：%s\n", error.message);
         return 1;
     }
-    printf("正在删除文件 %s\n", argv[1]);
-    error = ufile_delete("csdk-create-bucket", argv[1]);
+    printf("正在删除文件 %s\n", key_name);
+    error = ufile_delete(bucket_name, key_name);
     if(UFILE_HAS_ERROR(error.code)){
         printf("删除文件失败，错误信息为：%s\n", error.message);
     }else{

@@ -51,7 +51,7 @@ int main(int argc, char *argv[]){
 
     struct ufile_file_info file_info;
     printf("调用 head file .....\n");
-    error = ufile_head("iop-build","centos6_ufile.tar", &file_info);
+    error = ufile_head("csdk-create-bucket","test", &file_info);
     if UFILE_HAS_ERROR(error.code) {
         printf("调用 head 失败，错误信息为：%s\n", error.message);
     }else{
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]){
         fprintf(stderr, "打开文件失败, 错误信息为: %s\n", strerror(errno));
         return 1;
     }
-    error = ufile_put_file("iop-build", "test", "", fp);
+    error = ufile_put_file("csdk-create-bucket", "test", "", fp);
     if UFILE_HAS_ERROR(error.code) {
         printf("调用 PUT 失败，错误信息为：%s\n", error.message);
     }else{
