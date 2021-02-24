@@ -67,5 +67,8 @@ target_link_libraries(async_mput ${DEPEND_LIB} pthread) #link pthread 库
 add_executable(file_async_mput file_async_mput.c thpool.c) 
 target_link_libraries(file_async_mput ${DEPEND_LIB} pthread) #link pthread 库
 
-add_executable(file_async_mput file_async_mput.c thpool.c) 
-target_link_libraries(file_async_mput ${DEPEND_LIB} pthread) #link pthread 库
+add_executable(file_async_download file_async_download.c thpool.c) 
+target_link_libraries(file_async_download ${DEPEND_LIB} pthread) #link pthread 库
+
+add_executable(dns_test dns_test.c thpool.c) 
+target_link_libraries(dns_test ${DEPEND_LIB} pthread) #link pthread 库

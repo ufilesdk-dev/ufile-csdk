@@ -19,8 +19,8 @@ int main(int argc, char *argv[]){
     struct ufile_config cfg;
     cfg.public_key = getenv("UFILE_PUBLIC_KEY");
     cfg.private_key = getenv("UFILE_PRIVATE_KEY");
-    cfg.bucket_host = "api.ucloud.cn";
-    cfg.file_host = "cn-bj.ufileos.com";
+    cfg.bucket_host = getenv("UFILE_BUCKET_HOST");
+    cfg.file_host = getenv("UFILE_FILE_HOST");
 
     char* bucket_name;
     char* region;

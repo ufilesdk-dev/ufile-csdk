@@ -9,8 +9,8 @@ int main(int argc, char *argv[]){
     struct ufile_config cfg;
     cfg.public_key = getenv("UFILE_PUBLIC_KEY");
     cfg.private_key = getenv("UFILE_PRIVATE_KEY");
-    cfg.bucket_host = "api.ucloud.cn";
-    cfg.file_host = "cn-bj.ufileos.com";
+    cfg.bucket_host = getenv("UFILE_BUCKET_HOST");
+    cfg.file_host = getenv("UFILE_FILE_HOST");
 
     printf("正在初始化 SDK ......\n");
     struct ufile_error error;

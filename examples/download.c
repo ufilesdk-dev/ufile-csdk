@@ -5,17 +5,16 @@
 #include <string.h>
 
 #define fourMegabyte 1 << 22 //4M
+const char* bucket_name = "csdk-create-bucket";
+const char* key_name = "mput";
+const char* dl_file_path = "/data/pics/download";
 
 int main(int argc, char *argv[]){
-    if(argc < 2){
-        printf("请输入一个文件 key!!!");
-        exit(1);
-    }
     struct ufile_config cfg;
     cfg.public_key = getenv("UFILE_PUBLIC_KEY");
     cfg.private_key = getenv("UFILE_PRIVATE_KEY");
-    cfg.bucket_host = "api.ucloud.cn";
-    cfg.file_host = "cn-bj.ufileos.com";
+    cfg.bucket_host = getenv("UFILE_BUCKET_HOST");
+    cfg.file_host = getenv("UFILE_FILE_HOST");
 
     printf("正在初始化 SDK ......\n");
     struct ufile_error error;
@@ -26,9 +25,9 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    FILE *fp = fopen(argv[1], "wb");
+    FILE *fp = fopen(dl_file_path, "wb");
     printf("调用 download 下载文件.....\n");
-    error = ufile_download("csdk-create-bucket", argv[1], fp, NULL);
+    error = ufile_download(bucket_name, key_name, fp, NULL);
     if UFILE_HAS_ERROR(error.code){
         printf("调用 download 失败，错误信息为:%s\n", error.message);
         ufile_sdk_cleanup();
@@ -41,7 +40,7 @@ int main(int argc, char *argv[]){
     size_t pos = 0;
     size_t return_size;
     while(!UFILE_HAS_ERROR(error.code)){
-        error = ufile_download_piece("csdk-create-bucket", "go1.6.tar", pos, buf, fourMegabyte, &return_size);
+        error = ufile_download_piece(bucket_name, key_name, pos, buf, fourMegabyte, &return_size);
         if(return_size < fourMegabyte){ //像fread一样，如果的实际读取的字节数小于buf大小，那么就表示已经读到了文件结尾。
             break;
         }

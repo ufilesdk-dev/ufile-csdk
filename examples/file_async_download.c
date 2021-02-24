@@ -5,6 +5,8 @@
 #include <sys/time.h>
 #include "thpool.h" //线程池模块，仅做为测试用，不包含在sdk模块中。
 
+const char* bucket = "csdk-for-dahua";
+
 void dl_file(void *param){
     struct timeval start, end;
     gettimeofday( &start, NULL );
@@ -17,16 +19,12 @@ void dl_file(void *param){
         return;
     }
     struct ufile_error error;
-    error = ufile_download("csdk-for-dahua", filepath, fp, NULL);
+    error = ufile_download(bucket, filepath, fp, NULL);
     fclose(fp);
     gettimeofday( &end, NULL );
     int timeuse = 1000000 * ( end.tv_sec - start.tv_sec ) + end.tv_usec - start.tv_usec; 
     if (timeuse/1000 > 500) {
         printf("time: %d, timeuse gt 500ms: %d ms\n", end.tv_sec, timeuse/1000);
-        // printf("timeuse=%d ms \n", timeuse/1000);
-        // printf("start=%d\n", start);
-        // printf("end=%d\n", end);
-        // printf("index=%d\n", *index);
     }
     return;
 }
@@ -53,8 +51,6 @@ int main(int argc, char *argv[]){
     printf("finish thpool_add_work!\n");
     thpool_wait(thpool);
     thpool_destroy(thpool);
-
-    
     ufile_sdk_cleanup();
     return 0;
 }

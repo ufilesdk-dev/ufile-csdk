@@ -4,6 +4,11 @@
 #include <errno.h>
 #include <string.h>
 
+const char* bucket_name = "csdk-create-bucket";
+const char* key_name = "mput";
+const char* ul_file_path = "/data/pics/valgrind-3.13.0.tar";
+const char* mime_type = "";
+
 int main(int argc, char *argv[]){
     // if(argc < 2){
     //     printf("请输入一个文件路径！！！！");
@@ -12,8 +17,8 @@ int main(int argc, char *argv[]){
     struct ufile_config cfg;
     cfg.public_key = getenv("UFILE_PUBLIC_KEY");
     cfg.private_key = getenv("UFILE_PRIVATE_KEY");
-    cfg.bucket_host = "api.ucloud.cn";
-    cfg.file_host = "cn-bj.ufileos.com";
+    cfg.bucket_host = getenv("UFILE_BUCKET_HOST");
+    cfg.file_host = getenv("UFILE_FILE_HOST");
 
     printf("正在初始化 SDK ......\n");
     struct ufile_error error;
@@ -26,7 +31,7 @@ int main(int argc, char *argv[]){
 
     printf("调用 ufile_multiple_upload_init 初始化分片\n");
     struct ufile_mutipart_state state;
-    error = ufile_multiple_upload_init(&state, "csdk-create-bucket", "Makefile", "");
+    error = ufile_multiple_upload_init(&state, bucket_name, key_name, mime_type);
     if(UFILE_HAS_ERROR(error.code)){
         ufile_sdk_cleanup();
         printf("调用 ufile_multiple_upload_init 失败，错误信息为：%d, %s\n", error.code, error.message);
@@ -35,7 +40,7 @@ int main(int argc, char *argv[]){
     printf("调用 ufile_multiple_upload_init 初始化分片成功\n");
 
     printf("打开文件 Makefile \n");
-    FILE *fp = fopen("Makefile", "rb");
+    FILE *fp = fopen(ul_file_path, "rb");
     if (fp == NULL){
         fprintf(stderr, "打开文件失败, 错误信息为: %s\n", strerror(errno));
         return 1;
@@ -70,8 +75,5 @@ int main(int argc, char *argv[]){
     return 0;
 }
 
-
-// UCloud iek7dnVdSef48jmWFOrG1IN9LM5MdSevin-2ZSih:bUsw08fL2vfxrBijY9Y9kQjotmc=
-// UCloud iek7dnVdSef48jmWFOrG1IN9LM5MdSevin-2ZSih:bUsw08fL2vfxrBijY9Y9kQjotmc=
 
 
