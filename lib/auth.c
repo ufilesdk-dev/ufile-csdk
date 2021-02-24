@@ -21,11 +21,9 @@ char * ufile_file_authorization(const char *public_key, const char *private_key,
     HMAC_SHA1(HMAC_str, (unsigned char*)private_key, strlen(private_key),
               (unsigned char*)sig_data, strlen(sig_data));
 
-    char signature[30];
+    char signature[20];
     base64encode(signature, (const char*)HMAC_str, 20);
-    printf("signature %s", signature);
-    signature[20] = '\0';
-    printf("signature %s", signature);
+
     free(sig_data);
     return ufile_strconcat("UCloud ", public_key, ":", signature, NULL);
 }

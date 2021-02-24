@@ -133,6 +133,10 @@ ufile_multiple_upload_abort(struct ufile_mutipart_state *self);
 extern struct ufile_error
 ufile_download(const char *bucket_name, const char *key, FILE *file, size_t *return_size);
 
+//下载远端文件到本地文件， return_size 返回实际下载的大小，以 byte 为单位。
+extern struct ufile_error
+ufile_download1(const char *bucket_name, const char *key, FILE *file, size_t *return_size);
+
 //分片下载远端文件中的一片到 buf 中， return_size 返回实际下载的大小，以 byte 为单位。
 //return_size 通常会和 buf_len 是一样的大小，除非下载最后一片。
 //您可以据此判断一个文件是否已经下载到了最后一个分片。
