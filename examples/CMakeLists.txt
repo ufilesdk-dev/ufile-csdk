@@ -16,6 +16,9 @@ SET(CMAKE_CXX_FLAGS_RELEASE "$ENV{CXXFLAGS} -O3 -Wall")
 add_executable(bucket bucket.c)
 target_link_libraries(bucket ${DEPEND_LIB})
 
+add_executable(file file.c)
+target_link_libraries(file ${DEPEND_LIB})
+
 add_executable(bucket_create bucket_create.c)
 target_link_libraries(bucket_create ${DEPEND_LIB})
 
