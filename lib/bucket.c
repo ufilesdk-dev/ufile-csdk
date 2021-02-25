@@ -51,6 +51,10 @@ parse_error(struct bucket_resp *br){
     case 173:
         error.message = "The account has been restricted.";
         break;
+    case 230:
+        error.code = 179;
+        error.message = "Region not available.";
+        break;
     case 15000:
         error.message = "Duplicate bucket name, please input again.";
         break;
@@ -59,6 +63,9 @@ parse_error(struct bucket_resp *br){
         break;
     case 15004:
         error.message="This operation request has timed out, please retry later.";
+        break;
+    case 15010:
+        error.message="Bucket not found.";
         break;
     case 15023:
         error.message="The bucket does not empty, it can't delete.";
