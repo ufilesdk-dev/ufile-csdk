@@ -8,7 +8,7 @@ void randstring(char *out,  size_t length){
     static char charset[] = "abcdefghijklmnopqrstuvwxyz";
     static size_t s_len = sizeof(charset)-1;
     int i = 0;
-    for (i = 0;i < length;i++) {            
+    for (i = 0;i < length - 1;i++) {            
         int key = rand() % (int)s_len;
         out[i] = charset[key];
     }
@@ -23,25 +23,21 @@ int main(int argc, char *argv[]){
     cfg.file_host = getenv("UFILE_FILE_HOST");
 
     char* bucket_name;
-    char* region;
-    char* bucket_type;
+    char* region = "cn-bj";
+    char* bucket_type = "private";
     if (argc > 1) {
         bucket_name = argv[1];
     } else {
-        bucket_name = (char *)malloc(8);
-        randstring(bucket_name, 7);
+        char tmp_bucket[10];
+        randstring(tmp_bucket, 9);
+        tmp_bucket[9] = '\0';
+        bucket_name = tmp_bucket;
     }
     if (argc > 2) {
         region = argv[2];
-    } else {
-        region = (char *)malloc(6);
-        region = "cn-bj";
     }
     if (argc > 3) {
         bucket_type = argv[3];
-    } else {
-        bucket_type = (char *)malloc(8);
-        bucket_type = "private";
     }
 
     printf("正在初始化 SDK ......\n");

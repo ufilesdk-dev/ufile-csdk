@@ -10,10 +10,6 @@ const char* ul_file_path = "/data/pics/valgrind-3.13.0.tar";
 const char* mime_type = "";
 
 int main(int argc, char *argv[]){
-    // if(argc < 2){
-    //     printf("请输入一个文件路径！！！！");
-    //     exit(1);
-    // }
     struct ufile_config cfg;
     cfg.public_key = getenv("UFILE_PUBLIC_KEY");
     cfg.private_key = getenv("UFILE_PRIVATE_KEY");
@@ -56,11 +52,13 @@ int main(int argc, char *argv[]){
         error = ufile_multiple_upload_part(&state, buf, nc, i);
         if(UFILE_HAS_ERROR(error.code)){
             printf("调用 ufile_multiple_upload_part 失败，错误信息为：%d, %s\n", error.code, error.message);
+            free(buf);
             ufile_multiple_upload_abort(&state);
             ufile_sdk_cleanup();
             return 1;
         }
     }
+    free(buf);
     printf("调用 ufile_multiple_upload_part 上传分片完成\n");
 
     printf("调用 ufile_multiple_upload_finish 完成分片上传\n");

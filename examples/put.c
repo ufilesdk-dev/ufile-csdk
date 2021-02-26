@@ -50,9 +50,9 @@ int main(int argc, char *argv[]){
     }else{
         printf("调用 put_buf 成功\n");
     }
-
     free(buf);
     fclose(fp);
+    
     ufile_sdk_cleanup();
     return 0;
 }

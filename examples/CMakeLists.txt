@@ -75,3 +75,6 @@ target_link_libraries(file_async_download ${DEPEND_LIB} pthread) #link pthread �
 
 add_executable(dns_test dns_test.c thpool.c) 
 target_link_libraries(dns_test ${DEPEND_LIB} pthread) #link pthread 库
+
+add_executable(multi_bucket_op multi_bucket_op.c thpool.c) 
+target_link_libraries(multi_bucket_op ${DEPEND_LIB} pthread) #link pthread 库

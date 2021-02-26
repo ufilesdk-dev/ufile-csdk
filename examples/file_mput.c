@@ -12,9 +12,8 @@ int main(int argc, char *argv[]){
     char* bucket_name = argv[1];
     char* key_name = argv[2];
     char* file_path = argv[3];
-    char* mime_type = "";
+    char* mime_type = NULL;
     if (argc > 4) {
-       mime_type = malloc(strlen(argv[4]));
        mime_type = argv[4];
     }
     printf("分片上传: bucket_name=%s key_name=%s file_path=%s mime_type=%s\n", bucket_name, key_name, file_path, mime_type);
@@ -62,11 +61,13 @@ int main(int argc, char *argv[]){
         error = ufile_multiple_upload_part(&state, buf, nc, i);
         if(UFILE_HAS_ERROR(error.code)){
             printf("调用 ufile_multiple_upload_part 失败，错误信息为：%d, %s\n", error.code, error.message);
+            free(buf);
             ufile_multiple_upload_abort(&state);
             ufile_sdk_cleanup();
             return 1;
         }
     }
+    free(buf);
     printf("调用 ufile_multiple_upload_part 上传分片完成\n");
 
     printf("调用 ufile_multiple_upload_finish 完成分片上传\n");
