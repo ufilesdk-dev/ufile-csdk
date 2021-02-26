@@ -247,7 +247,7 @@ struct ufile_error curl_do(CURL *curl)
         if (share_handle == NULL) {
             pthread_rwlock_init(&rwlock, NULL); 
             share_handle = curl_share_init();  // curl 共享句柄：作用是允许curl句柄间共享数据
-            curl_share_setopt(share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS); // 设置需要共享的数据，CURLSHOPT_SHARE表示设置dns缓存共享
+            curl_share_setopt(share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS); // 设置需要共享的数据，CURLSHOPT_SHARE表示设置dns缓存共享,默认300s
             curl_share_setopt(share_handle, CURLSHOPT_LOCKFUNC, lock_cb);
             curl_share_setopt(share_handle, CURLSHOPT_UNLOCKFUNC, unlock_cb);  
         }
@@ -257,24 +257,15 @@ struct ufile_error curl_do(CURL *curl)
             exit(EXIT_FAILURE);
         }
     }
-    curl_easy_setopt(curl, CURLOPT_SHARE, share_handle);  // CURLOPT_SHARE：表示curl使用share_handle内的数据
+    curl_easy_setopt(curl, CURLOPT_SHARE, share_handle);  // CURLOPT_SHARE：使用share_handle内的数据
 
     struct ufile_error error = NO_ERROR;
-    // struct timeval start, end;
-    // gettimeofday( &start, NULL );
     CURLcode curl_code = curl_easy_perform(curl);
     if (curl_code != CURLE_OK) {
         error.code = CURL_ERROR_CODE;
         error.message = curl_easy_strerror(curl_code);
         return error;
     }
-    // gettimeofday( &end, NULL );
-    // int timeuse = 1000000 * ( end.tv_sec - start.tv_sec ) + end.tv_usec - start.tv_usec; 
-    // if (timeuse/1000 > 500) {
-    //     printf("curl_easy_perform: start=%d\n", start);
-    //     printf("curl_easy_perform: end=%d\n", end);
-    //     printf("curl_easy_perform: timeuse=%d ms\n", timeuse/1000);
-    // }
 
     long response_code;
     if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code) != CURLE_OK){
@@ -294,15 +285,6 @@ struct ufile_error curl_do(CURL *curl)
     return error;
 }
 
-// CURLSH* share_handle = NULL;
-void init_share_handle() {
-    // 设置dns共享数据
-    pthread_rwlock_init(&rwlock, NULL); 
-    CURLSH* share_handle = curl_share_init();  // curl 共享句柄：作用是允许curl句柄间共享数据
-    curl_share_setopt(share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS); // 设置需要共享的数据，CURLSHOPT_SHARE表示设置dns缓存共享
-    curl_share_setopt(share_handle, CURLSHOPT_LOCKFUNC, lock_cb);
-    curl_share_setopt(share_handle, CURLSHOPT_UNLOCKFUNC, unlock_cb);  
-}
 
 static void lock_cb(CURL *handle, curl_lock_data data, curl_lock_access access,void *userptr){ 
     if (data == CURL_LOCK_DATA_DNS){ 

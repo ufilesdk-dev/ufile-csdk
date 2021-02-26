@@ -48,7 +48,6 @@ struct ufile_error curl_do(CURL *curl);
 size_t http_write_cb(char *ptr, size_t size, size_t nmemb, void *user_data);
 size_t http_read_cb(char *ptr, size_t size, size_t nitems, void *user_data);
 
-void init_share_handle();
 static void lock_cb(CURL *handle, curl_lock_data data, curl_lock_access access,void *userptr);
 static void unlock_cb(CURL *handle, curl_lock_data data, void *userptr);
 
