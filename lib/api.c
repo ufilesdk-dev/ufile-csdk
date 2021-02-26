@@ -66,8 +66,8 @@ struct ufile_error ufile_sdk_initialize(const struct ufile_config cfg, int debug
 void ufile_sdk_cleanup(){
     if (_global_config != NULL) {
         ufile_free_config(*_global_config);
-        free((void*)_global_config);
     }
+    free((void*)_global_config);
     curl_global_cleanup();
 }
 
@@ -107,16 +107,8 @@ struct ufile_error ufile_load_config_from_json(const char* json_buf, struct ufil
 }
 
 void ufile_free_config(struct ufile_config cfg){
-    if (cfg.public_key == NULL) {
-        free((void*)cfg.public_key);
-    }
-    if (cfg.private_key == NULL) {
-        free((void*)cfg.private_key);
-    }
-    if (cfg.public_key == NULL) {
-        free((void*)cfg.bucket_host);
-    }
-    if (cfg.public_key == NULL) {
-        free((void*)cfg.file_host);
-    }
+    free((void*)cfg.public_key);
+    free((void*)cfg.private_key);
+    free((void*)cfg.bucket_host);
+    free((void*)cfg.file_host);
 }
