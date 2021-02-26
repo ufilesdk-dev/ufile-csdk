@@ -232,31 +232,20 @@ struct ufile_error check_bucket_key(const char *bucket_name, const char *key){
 }
 
 
-pthread_rwlock_t rwlock;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER; // 临界区
+CURLSH* share_handle = NULL; // 共享DNS缓存
+pthread_rwlock_t rwlock;    // share_handle DNS缓存读写锁
+static pthread_once_t share_heandler_is_initialized = PTHREAD_ONCE_INIT;
+void init_share_handler() {
+    pthread_rwlock_init(&rwlock, NULL); 
+    share_handle = curl_share_init();  // curl 共享句柄：作用是允许curl句柄间共享数据
+    curl_share_setopt(share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS); // 设置需要共享的数据，CURLSHOPT_SHARE表示设置dns缓存共享,默认300s
+    curl_share_setopt(share_handle, CURLSHOPT_LOCKFUNC, lock_cb);
+    curl_share_setopt(share_handle, CURLSHOPT_UNLOCKFUNC, unlock_cb);  
+}
 
-struct ufile_error curl_do(CURL *curl)
-{
-    static CURLSH* share_handle = NULL;
-    if (share_handle == NULL) {
-        if(pthread_mutex_lock(&mutex) != 0) // 临界区，防止对rwlock和share_handle多次初始化
-        {
-            perror("pthread_mutex_lock");
-            exit(EXIT_FAILURE);
-        }
-        if (share_handle == NULL) {
-            pthread_rwlock_init(&rwlock, NULL); 
-            share_handle = curl_share_init();  // curl 共享句柄：作用是允许curl句柄间共享数据
-            curl_share_setopt(share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS); // 设置需要共享的数据，CURLSHOPT_SHARE表示设置dns缓存共享,默认300s
-            curl_share_setopt(share_handle, CURLSHOPT_LOCKFUNC, lock_cb);
-            curl_share_setopt(share_handle, CURLSHOPT_UNLOCKFUNC, unlock_cb);  
-        }
-        if(pthread_mutex_unlock(&mutex) != 0)
-        {
-            perror("pthread_mutex_unlock");
-            exit(EXIT_FAILURE);
-        }
-    }
+
+struct ufile_error curl_do(CURL *curl){
+    (void) pthread_once(&share_heandler_is_initialized, init_share_handler);    
     curl_easy_setopt(curl, CURLOPT_SHARE, share_handle);  // CURLOPT_SHARE：使用share_handle内的数据
 
     struct ufile_error error = NO_ERROR;
@@ -284,7 +273,6 @@ struct ufile_error curl_do(CURL *curl)
     }
     return error;
 }
-
 
 static void lock_cb(CURL *handle, curl_lock_data data, curl_lock_access access,void *userptr){ 
     if (data == CURL_LOCK_DATA_DNS){ 
