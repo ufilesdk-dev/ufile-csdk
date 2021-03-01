@@ -9,8 +9,7 @@
 struct ufile_config *_global_config = NULL;
 int _g_debug_open = 0;
 
-static struct ufile_error
-config_validation(struct ufile_config cfg){
+static struct ufile_error config_validation(struct ufile_config cfg){
     struct ufile_error error=NO_ERROR;
     if (!cfg.private_key || strlen(cfg.private_key) == 0){
         error.code = UFILE_CONFIG_ERROR_CODE;
@@ -38,8 +37,7 @@ config_validation(struct ufile_config cfg){
     return error;
 }
 
-struct ufile_error
-ufile_sdk_initialize(const struct ufile_config cfg, int debug_open){
+struct ufile_error ufile_sdk_initialize(const struct ufile_config cfg, int debug_open){
     _g_debug_open = debug_open; 
     struct ufile_error error = NO_ERROR;
     if(_global_config != NULL){
@@ -65,15 +63,15 @@ ufile_sdk_initialize(const struct ufile_config cfg, int debug_open){
     return error;
 }
 
-void
-ufile_sdk_cleanup(){
-    ufile_free_config(*_global_config);
+void ufile_sdk_cleanup(){
+    if (_global_config != NULL) {
+        ufile_free_config(*_global_config);
+    }
     free((void*)_global_config);
     curl_global_cleanup();
 }
 
-void 
-ufile_free_file_info(struct ufile_file_info info){
+void ufile_free_file_info(struct ufile_file_info info){
     if(info.etag != NULL){
         free((void*)info.etag);
     }
@@ -82,8 +80,7 @@ ufile_free_file_info(struct ufile_file_info info){
     }
 }
 
-struct ufile_error
-ufile_load_config_from_json(const char* json_buf, struct ufile_config *cfg){
+struct ufile_error ufile_load_config_from_json(const char* json_buf, struct ufile_config *cfg){
     struct ufile_error error = NO_ERROR;
     struct cJSON *json = cJSON_Parse(json_buf); 
     if(json==NULL){
@@ -109,8 +106,7 @@ ufile_load_config_from_json(const char* json_buf, struct ufile_config *cfg){
     return error;
 }
 
-void 
-ufile_free_config(struct ufile_config cfg){
+void ufile_free_config(struct ufile_config cfg){
     free((void*)cfg.public_key);
     free((void*)cfg.private_key);
     free((void*)cfg.bucket_host);

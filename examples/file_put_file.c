@@ -5,12 +5,20 @@
 #include <string.h>
 #include "helper.h"
 
-const char* bucket_name = "csdk-create-bucket";
-const char* key_name = "config.json";
-const char* ul_file_path = "config.json";
-const char* mime_type = "plain/json";
-
 int main(int argc, char *argv[]){
+    if (argc < 4) {
+       printf("请依次提供bucket_name、key_name、file_path、mime_type(mime_type可为空)\n"); 
+       return 1;
+    }
+    char* bucket_name = argv[1];
+    char* key_name = argv[2];
+    char* file_path = argv[3];
+    char* mime_type = NULL;
+    if (argc > 4) {
+       mime_type = argv[4];
+    }
+    printf("文件上传: bucket_name=%s key_name=%s file_path=%s mime_type=%s\n", bucket_name, key_name, file_path, mime_type);
+    
     struct ufile_config cfg;
     cfg.public_key = getenv("UFILE_PUBLIC_KEY");
     cfg.private_key = getenv("UFILE_PRIVATE_KEY");
@@ -25,34 +33,22 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    printf("打开文件 %s\n", argv[0]);
-    FILE *fp = fopen(ul_file_path, "rb");
+
+    printf("打开文件 %s\n", file_path);
+    FILE *fp = fopen(file_path, "rb");
     if (fp == NULL){
         fprintf(stderr, "打开文件失败, 错误信息为: %s\n", strerror(errno));
         return 1;
     }
-    printf("调用 put 上传文件 %s\n", argv[0]);
+    printf("调用 ufile_put_file 上传文件 %s\n", file_path);
     error = ufile_put_file(bucket_name, key_name, mime_type, fp);
     if UFILE_HAS_ERROR(error.code) {
-        printf("调用 put 失败，错误信息为：%s\n", error.message);
+        printf("调用 ufile_put_file 失败，错误信息为：%s\n", error.message);
     }else{
-        printf("调用 put 成功\n");
+        printf("调用 ufile_put_file 成功\n");
     }
 
-    printf("调用 put_buf 上传文件......\n");
-    size_t file_size = helper_get_file_size(fp);
-    char *buf = malloc(file_size);
-    fseek(fp, 0, SEEK_SET);
-    fread(buf, 1, file_size, fp);
-    error = ufile_put_buf(bucket_name, key_name, mime_type, buf, file_size);
-    if UFILE_HAS_ERROR(error.code) {
-        printf("调用 put_buf 失败，错误信息为：%s\n", error.message);
-    }else{
-        printf("调用 put_buf 成功\n");
-    }
-    free(buf);
     fclose(fp);
-    
     ufile_sdk_cleanup();
     return 0;
 }

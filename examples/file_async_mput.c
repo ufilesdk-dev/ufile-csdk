@@ -28,10 +28,26 @@ void upload_task(void *param){
 
 
 int main(int argc, char *argv[]){
-    if(argc < 2){
-        printf("请输入一个文件路径！！！！");
-        exit(1);
+    if (argc < 4) {
+       printf("请依次提供bucket_name、key_name、file_path、mime_type(mime_type可为空)、jobs(并发数量[1-10])\n"); 
+       return 1;
     }
+    char* bucket_name = argv[1];
+    char* key_name = argv[2];
+    char* file_path = argv[3];
+    char* mime_type;
+    if (argc > 4) {
+       mime_type = argv[4];
+    }
+    int jobs = 4;
+    if (argc > 5) {
+       jobs = atof(argv[5]);
+       if (jobs <= 0 || jobs > 10) {
+           jobs = 4;
+       }
+    }
+    printf("分片上传: bucket_name=%s key_name=%s file_path=%s mime_type=%s jobs=%d\n", bucket_name, key_name, file_path, mime_type, jobs);
+
     struct ufile_config cfg;
     cfg.public_key = getenv("UFILE_PUBLIC_KEY");
     cfg.private_key = getenv("UFILE_PRIVATE_KEY");
@@ -47,20 +63,18 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    printf("调用 (mput)分片 上传文件.....\n");
+    printf("调用ufile_multiple_upload_init初始化分片\n");
     struct ufile_mutipart_state state;
-    char key_name[100] = "async_mput_";
-    strcat(key_name, argv[1]);
-    error = ufile_multiple_upload_init(&state, "csdk-create-bucket", key_name, "");
+    error = ufile_multiple_upload_init(&state, bucket_name, key_name, file_path);
     if(UFILE_HAS_ERROR(error.code)){
         ufile_sdk_cleanup();
         printf("调用 ufile_multiple_upload_init 失败，错误信息为：%d, %s\n", error.code, error.message);
         return 1;
     }
 
-    threadpool thpool = thpool_init(4); //初始化 4 线程的线程池。
+    threadpool thpool = thpool_init(jobs); 
 
-    FILE *fp = fopen(argv[1], "rb");
+    FILE *fp = fopen(file_path, "rb");
     int i;
     for(i=0; ; i++){
         struct part_data *part = malloc(sizeof(struct part_data));

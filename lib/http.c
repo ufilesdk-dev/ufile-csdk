@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
+#include <sys/time.h>
+#include <pthread.h>
 #include "string_util.h"
 #include "auth.h"
 #include "encoding.h"
 #include "api.h"
+
 
 #define USERAGENT ("UFile CSDK/2.0.0")
 #define HTTP_IS_OK(CODE) ((CODE)/100 == 2)
@@ -14,8 +16,7 @@
 extern struct ufile_config *_global_config;
 extern int _g_debug_open;
 
-struct ufile_error
-set_http_options(struct http_options *opt, 
+struct ufile_error set_http_options(struct http_options *opt, 
                  const char *method,
                  const char *mime_type,
                  const char *bucket,
@@ -67,9 +68,7 @@ set_http_options(struct http_options *opt,
     return error;
 }
 
-void
-set_curl_options(CURL *curl,
-                 struct http_options *opt) {
+void set_curl_options(CURL *curl,struct http_options *opt) {
     curl_easy_setopt(curl, CURLOPT_URL, opt->url);
     curl_easy_setopt(curl, CURLOPT_CUSTOMREQUEST, opt->method);
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, opt->header);
@@ -79,16 +78,14 @@ set_curl_options(CURL *curl,
 
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 }
-void
-set_content_length(struct http_options* opt, size_t length){
+
+void set_content_length(struct http_options* opt, size_t length){
     char tmp[40] = {0};
     sprintf(tmp, "Content-Length: %ld", length);
     opt->header = curl_slist_append(opt->header, tmp); 
 }
 
-void
-http_cleanup(CURL *curl,
-             struct http_options *opt){
+void http_cleanup(CURL *curl, struct http_options *opt){
     if(curl != NULL){
         curl_easy_cleanup(curl);
     }
@@ -104,35 +101,6 @@ http_cleanup(CURL *curl,
         }
     }
 }
-
-struct ufile_error
-curl_do(CURL *curl){
-    struct ufile_error error = NO_ERROR;
-    CURLcode curl_code = curl_easy_perform(curl);
-    if (curl_code != CURLE_OK) {
-        error.code = CURL_ERROR_CODE;
-        error.message = curl_easy_strerror(curl_code);
-        return error;
-    }
-
-    long response_code;
-    if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code) != CURLE_OK){
-        error.code = CURL_ERROR_CODE;
-        error.message = "Get curl response code failed.";
-        return error;
-    }
-
-    if (!HTTP_IS_OK(response_code)){
-        error.message = "http is not OK, check the code as HTTP code.";
-    }
-
-    error.code = response_code;
-    if(error.code == 404){
-        error.message = "File not found.";
-    }
-    return error;
-}
-
 
 size_t http_write_cb(char *ptr, size_t size, size_t nmemb, void *user_data) {
     struct http_body *param = (struct http_body *)user_data;
@@ -188,8 +156,7 @@ size_t http_read_cb(char *ptr, size_t size, size_t nitems, void *user_data) {
     }
 }
 
-void
-set_escaped_url(CURL *curl, struct http_options *opt, const char* query){
+void set_escaped_url(CURL *curl, struct http_options *opt, const char* query){
     char* escaped_str = curl_easy_escape(curl, query, 0);
     char *t = opt->url;
     opt->url = ufile_strconcat(opt->url, "?", query, NULL);
@@ -197,14 +164,11 @@ set_escaped_url(CURL *curl, struct http_options *opt, const char* query){
     curl_free(escaped_str);
 }
 
-struct ufile_error
-set_download_options(
-    CURL *curl,
-    const char* bucket,
-    const char* key,
-    size_t start_pos,
-    size_t end_pos)
-{
+struct ufile_error set_download_options(CURL *curl,
+                    const char* bucket,
+                    const char* key,
+                    size_t start_pos,
+                    size_t end_pos) {
     struct ufile_error error = NO_ERROR;
     struct ufile_config *cfg = _global_config;
 
@@ -251,8 +215,7 @@ set_download_options(
     return error;
 }
 
-struct ufile_error
-check_bucket_key(const char *bucket_name, const char *key){
+struct ufile_error check_bucket_key(const char *bucket_name, const char *key){
     struct ufile_error error=NO_ERROR;
     if(!bucket_name || *bucket_name == '\0'){
         error.code = UFILE_PARAM_ERROR_CODE;
@@ -267,3 +230,65 @@ check_bucket_key(const char *bucket_name, const char *key){
     }
     return error;
 }
+
+
+CURLSH* share_handle = NULL; // 共享DNS缓存
+pthread_rwlock_t rwlock;    // share_handle DNS缓存读写锁
+static pthread_once_t share_heandler_is_initialized = PTHREAD_ONCE_INIT;
+void init_share_handler() {
+    pthread_rwlock_init(&rwlock, NULL); 
+    share_handle = curl_share_init();  // curl 共享句柄：作用是允许curl句柄间共享数据
+    curl_share_setopt(share_handle, CURLSHOPT_SHARE, CURL_LOCK_DATA_DNS); // 设置需要共享的数据，CURLSHOPT_SHARE表示设置dns缓存共享,默认300s
+    curl_share_setopt(share_handle, CURLSHOPT_LOCKFUNC, lock_cb);
+    curl_share_setopt(share_handle, CURLSHOPT_UNLOCKFUNC, unlock_cb);  
+}
+
+
+struct ufile_error curl_do(CURL *curl){
+    (void) pthread_once(&share_heandler_is_initialized, init_share_handler);    
+    curl_easy_setopt(curl, CURLOPT_SHARE, share_handle);  // CURLOPT_SHARE：使用share_handle内的数据
+
+    struct ufile_error error = NO_ERROR;
+    CURLcode curl_code = curl_easy_perform(curl);
+    if (curl_code != CURLE_OK) {
+        error.code = CURL_ERROR_CODE;
+        error.message = curl_easy_strerror(curl_code);
+        return error;
+    }
+
+    long response_code;
+    if (curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code) != CURLE_OK){
+        error.code = CURL_ERROR_CODE;
+        error.message = "Get curl response code failed.";
+        return error;
+    }
+
+    if (!HTTP_IS_OK(response_code)){
+        error.message = "http is not OK, check the code as HTTP code.";
+    }
+
+    error.code = response_code;
+    if(error.code == 404){
+        error.message = "File not found.";
+    }
+    return error;
+}
+
+static void lock_cb(CURL *handle, curl_lock_data data, curl_lock_access access,void *userptr){ 
+    if (data == CURL_LOCK_DATA_DNS){ 
+        if ( access == CURL_LOCK_ACCESS_SHARED ){
+            pthread_rwlock_rdlock(&rwlock); 
+        }
+        else if( access == CURL_LOCK_ACCESS_SINGLE ) {
+            pthread_rwlock_wrlock(&rwlock); 
+        } 
+    }
+}
+
+static void unlock_cb(CURL *handle, curl_lock_data data, void *userptr){ 
+    if (data == CURL_LOCK_DATA_DNS){
+        pthread_rwlock_unlock(&rwlock); 
+    }
+}
+
+

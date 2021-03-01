@@ -4,12 +4,20 @@
 #include <errno.h>
 #include <string.h>
 
-const char* bucket_name = "csdk-create-bucket";
-const char* key_name = "mput";
-const char* ul_file_path = "/data/pics/valgrind-3.13.0.tar";
-const char* mime_type = "";
-
 int main(int argc, char *argv[]){
+    if (argc < 4) {
+       printf("请依次提供bucket_name、key_name、file_path、mime_type(mime_type可为空)\n"); 
+       return 1;
+    }
+    char* bucket_name = argv[1];
+    char* key_name = argv[2];
+    char* file_path = argv[3];
+    char* mime_type = NULL;
+    if (argc > 4) {
+       mime_type = argv[4];
+    }
+    printf("分片上传: bucket_name=%s key_name=%s file_path=%s mime_type=%s\n", bucket_name, key_name, file_path, mime_type);
+
     struct ufile_config cfg;
     cfg.public_key = getenv("UFILE_PUBLIC_KEY");
     cfg.private_key = getenv("UFILE_PRIVATE_KEY");
@@ -18,7 +26,7 @@ int main(int argc, char *argv[]){
 
     printf("正在初始化 SDK ......\n");
     struct ufile_error error;
-    error = ufile_sdk_initialize(cfg, 1);
+    error = ufile_sdk_initialize(cfg, 0);
     if(UFILE_HAS_ERROR(error.code)){
         ufile_sdk_cleanup();
         printf("初始化 sdk 失败，错误信息为：%s\n", error.message);
@@ -35,12 +43,13 @@ int main(int argc, char *argv[]){
     }
     printf("调用 ufile_multiple_upload_init 初始化分片成功\n");
 
-    printf("打开文件 Makefile \n");
-    FILE *fp = fopen(ul_file_path, "rb");
+    printf("打开文件 %s\n", file_path);
+    FILE *fp = fopen(file_path, "rb");
     if (fp == NULL){
         fprintf(stderr, "打开文件失败, 错误信息为: %s\n", strerror(errno));
         return 1;
     }
+
     printf("调用 ufile_multiple_upload_part 上传分片\n");
     char *buf = malloc(state.part_size);
     int i;
@@ -64,7 +73,7 @@ int main(int argc, char *argv[]){
     printf("调用 ufile_multiple_upload_finish 完成分片上传\n");
     error = ufile_multiple_upload_finish(&state);
     if(UFILE_HAS_ERROR(error.code)){
-        printf("调用 ufile_multiple_upload_part 失败，错误信息为：%s\n", error.message);
+        printf("调用 ufile_multiple_upload_finish 失败，错误信息为：%s\n", error.message);
     }else{
         printf("调用 ufile_multiple_upload_finish 成功\n");
     
@@ -72,6 +81,3 @@ int main(int argc, char *argv[]){
     ufile_sdk_cleanup();
     return 0;
 }
-
-
-

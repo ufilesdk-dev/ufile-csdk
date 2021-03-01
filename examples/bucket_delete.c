@@ -31,13 +31,12 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    char bucket_name[8]={0};
-    randstring(bucket_name, 7);
-    error = ufile_bucket_create(bucket_name, "cn-bj", "private");
-    if(UFILE_HAS_ERROR(error.code)){
-        printf("创建 bucket 失败，错误信息为：%s\n", error.message);
-    }else{
-        printf("创建 bucket 成功\n");
+    char* bucket_name;
+    if (argc > 1) {
+        bucket_name = argv[1];
+    } else {
+        printf("请提供要删除存储空间名称！\n");
+        return 1;
     }
 
     error = ufile_bucket_delete(bucket_name);
