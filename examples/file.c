@@ -8,13 +8,15 @@
 #include "helper.h"
 #define fourMegabyte 1 << 22 //4M
 
+const char region[20] = "cn-sh2";
+
 int main(int argc, char *argv[]){
     // 读取配置初始化SDK
     struct ufile_config cfg;
     cfg.public_key = getenv("UFILE_PUBLIC_KEY");
     cfg.private_key = getenv("UFILE_PRIVATE_KEY");
-    cfg.bucket_host = "api.ucloud.cn";
-    cfg.file_host = "www.internal-vn-sng.ufileos.com";
+    cfg.bucket_host = getenv("UFILE_BUCKET_HOST");
+    cfg.file_host = getenv("UFILE_FILE_HOST");
     struct ufile_error error;
     error = ufile_sdk_initialize(cfg, 0);
     if(UFILE_HAS_ERROR(error.code)){
@@ -28,7 +30,7 @@ int main(int argc, char *argv[]){
     struct timeval start;
     gettimeofday( &start, NULL );
     sprintf(bucket_name,"%d",start.tv_sec);
-    error = ufile_bucket_create(bucket_name, "vn-sng", "private");
+    error = ufile_bucket_create(bucket_name, region, "private");
     if(UFILE_HAS_ERROR(error.code)){
         printf("创建 bucket 失败，错误信息为：%s\n", error.message);
     }else{

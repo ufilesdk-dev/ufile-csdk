@@ -13,7 +13,7 @@ int main(int argc, char *argv[]){
     char* bucket_name = argv[1];
     char* key_name = argv[2];
     char* file_path = argv[3];
-    char* mime_type = NULL;
+    char* mime_type = "";
     if (argc > 4) {
        mime_type = argv[4];
     }
