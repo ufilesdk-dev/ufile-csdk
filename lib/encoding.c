@@ -510,6 +510,7 @@ void HMAC_SHA1(unsigned char hmac[HMAC_LEN], const unsigned char *key, int key_l
     unsigned char kopad[64], kipad[64];
     int i;
 
+    // sha1 输出一个长度为 20 bytes 的摘要 
     unsigned char digest[20];
     SHA1Context context; 
     char sha1_key[key_len];
@@ -521,8 +522,6 @@ void HMAC_SHA1(unsigned char hmac[HMAC_LEN], const unsigned char *key, int key_l
         strcpy(sha1_key, digest);
         key_len = 20;
     }
-
-
 
     for (i = 0; i < key_len; i++) {
         kopad[i] = sha1_key[i] ^ 0x5c;
