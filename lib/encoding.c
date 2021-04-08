@@ -510,23 +510,28 @@ void HMAC_SHA1(unsigned char hmac[HMAC_LEN], const unsigned char *key, int key_l
     unsigned char kopad[64], kipad[64];
     int i;
 
+    // sha1 输出一个长度为 20 bytes 的摘要 
+    unsigned char digest[20];
+    SHA1Context context; 
+    char sha1_key[key_len];
+    strcpy(sha1_key, key);
     if (key_len > 64) {
-        key_len = 64;
+        SHA1_init(&context);
+        SHA1_update(&context, sha1_key, key_len);
+        SHA1_final(digest, &context);
+        strcpy(sha1_key, digest);
+        key_len = 20;
     }
 
     for (i = 0; i < key_len; i++) {
-        kopad[i] = key[i] ^ 0x5c;
-        kipad[i] = key[i] ^ 0x36;
+        kopad[i] = sha1_key[i] ^ 0x5c;
+        kipad[i] = sha1_key[i] ^ 0x36;
     }
 
     for ( ; i < 64; i++) {
         kopad[i] = 0 ^ 0x5c;
         kipad[i] = 0 ^ 0x36;
     }
-
-    unsigned char digest[20];
-
-    SHA1Context context;
 
     SHA1_init(&context);
     SHA1_update(&context, kipad, 64);
