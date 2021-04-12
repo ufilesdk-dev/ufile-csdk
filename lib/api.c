@@ -75,7 +75,7 @@ void ufile_free_file_info(struct ufile_file_info info){
     if(info.etag != NULL){
         free((void*)info.etag);
     }
-    if(info.etag != NULL){
+    if(info.mime_type != NULL){
         free((void*)info.mime_type);
     }
 }

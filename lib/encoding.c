@@ -512,8 +512,8 @@ void HMAC_SHA1(unsigned char hmac[HMAC_LEN], const unsigned char *key, int key_l
 
     // sha1 输出一个长度为 20 bytes 的摘要 
     unsigned char digest[20];
-    SHA1Context context; 
-    char sha1_key[key_len];
+    SHA1Context context;
+    char sha1_key[key_len+1];
     strcpy(sha1_key, key);
     if (key_len > 64) {
         SHA1_init(&context);

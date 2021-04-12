@@ -30,6 +30,8 @@ int main(int argc, char *argv[]){
 
     printf("调用 ufile_head 获取文件基本信息\n");
     struct ufile_file_info file_info;
+    file_info.etag = NULL;
+    file_info.mime_type = NULL;
     error = ufile_head(bucket_name, key_name, &file_info);
     if UFILE_HAS_ERROR(error.code) {
         printf("调用 head 失败，错误信息为：%s\n", error.message);
