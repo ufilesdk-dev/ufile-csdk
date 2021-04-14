@@ -24,6 +24,8 @@ int main(int argc, char *argv[]){
     }
 
     struct ufile_file_info file_info;
+    file_info.etag = NULL;
+    file_info.mime_type = NULL;
     printf("调用 head file .....\n");
     error = ufile_head(bucket_name, key_name, &file_info);
     if UFILE_HAS_ERROR(error.code) {
