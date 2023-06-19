@@ -41,6 +41,5 @@ cd build;
 详细的使用方式见 [examples](https://github.com/ufilesdk-dev/ufile-csdk/tree/master/examples) 下的测试用例。
 
 ## 许可证
-Copyright (c) 2012-2019 ucloud.cn
-基于 MIT 协议发布:
-* [www.opensource.org/licenses/MIT](http://www.opensource.org/licenses/MIT)
+License
+[Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0.html)
