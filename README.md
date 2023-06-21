@@ -1,4 +1,7 @@
-# UCloud 对象存储官方 C 语言 SDK。
+# UCloud 对象存储官方 C 语言 SDK
+
+[![Software License](https://img.shields.io/github/license/saltstack/salt)](LICENSE)
+
 > Micromanagers tend to stay micromanagers. Workaholics tend to stay workaholics. Hustlers tend to stay hustlers.   
 > <*It doesn't have to be crazy at work*>
 
