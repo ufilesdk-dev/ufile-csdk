@@ -214,6 +214,7 @@ ufile_multiple_upload_part(struct ufile_mutipart_state *self, char *buffer, size
         node->curl = curl;
     }else{
         curl = node->curl;
+	curl_easy_reset(curl);
     }
     struct http_options opt;
     memset(&opt, 0, sizeof(struct http_options));
@@ -238,7 +239,6 @@ ufile_multiple_upload_part(struct ufile_mutipart_state *self, char *buffer, size
     curl_easy_setopt(curl, CURLOPT_READDATA, &body);
     curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)buf_len);
     opt.header = curl_slist_append(opt.header, "Expect: ");
-    curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
 
     set_curl_options(curl, &opt);
 
@@ -258,6 +258,7 @@ ufile_multiple_upload_finish(struct ufile_mutipart_state *self){
         goto FAILED;
     }
     CURL *curl = node->curl;
+    curl_easy_reset(curl);
 
     struct http_options opt;
     char query[64]={0};
@@ -280,7 +281,6 @@ ufile_multiple_upload_finish(struct ufile_mutipart_state *self){
     curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE, (curl_off_t)body.buffer_size);
     opt.header = curl_slist_append(opt.header, "Expect: ");
 
-    curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
     set_curl_options(curl, &opt);
 
     error = curl_do(curl);
