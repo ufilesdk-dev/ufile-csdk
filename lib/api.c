@@ -67,8 +67,12 @@ ufile_sdk_initialize(const struct ufile_config cfg, int debug_open){
 
 void
 ufile_sdk_cleanup(){
+    if (!_global_config) {
+      return;
+    }
     ufile_free_config(*_global_config);
     free((void*)_global_config);
+    _global_config = NULL;
     curl_global_cleanup();
 }
 
