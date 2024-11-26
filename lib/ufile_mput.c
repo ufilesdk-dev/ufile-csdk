@@ -188,6 +188,7 @@ ufile_multiple_upload_init(struct ufile_mutipart_state *self, const char *bucket
 
     self->bucket_name = ufile_strconcat(bucket_name, NULL);
     self->key = ufile_strconcat(key, NULL);
+    self->mime_type = ufile_strconcat(mime_type, NULL);
 
     self->etags = malloc(sizeof(struct etag_slist));
     self->etags->cap = 0;
@@ -220,7 +221,7 @@ ufile_multiple_upload_part(struct ufile_mutipart_state *self, char *buffer, size
     memset(&opt, 0, sizeof(struct http_options));
     char query[64]={0};
     sprintf(query, "partNumber=%d&uploadId=%s", part_number, self->upload_id);
-    error = set_http_options(&opt, "PUT", "", self->bucket_name, self->key, query);
+    error = set_http_options(&opt, "PUT", self->mime_type, self->bucket_name, self->key, query);
     if(UFILE_HAS_ERROR(error.code)){
         http_cleanup(curl, &opt);
         return error;
@@ -263,7 +264,7 @@ ufile_multiple_upload_finish(struct ufile_mutipart_state *self){
     struct http_options opt;
     char query[64]={0};
     sprintf(query, "uploadId=%s",self->upload_id);
-    error = set_http_options(&opt, "POST", "", self->bucket_name, self->key, query);
+    error = set_http_options(&opt, "POST", self->mime_type, self->bucket_name, self->key, query);
     if(UFILE_HAS_ERROR(error.code)){
         //set_http_options 在错误时不会分配内存，所以不需要释放。
         goto FAILED;

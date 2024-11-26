@@ -99,6 +99,8 @@ struct ufile_mutipart_state{
     const char *bucket_name;
     //远端的 key
     const char *key;
+    //mime type
+    const char *mime_type;
     //分片大小，不可改变，由 ufile_multiple_upload_init 返回。
     size_t part_size;
     //分片上传状态 ID，由 ufile_multiple_upload_init 返回。
